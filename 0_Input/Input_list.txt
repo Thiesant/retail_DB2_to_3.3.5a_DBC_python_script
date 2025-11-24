@@ -1,0 +1,29 @@
+Must contain:
+- **Listfile CSV** (any filename containing "listfile", case-insensitive)
+  - Format: `FileDataID;FilePath` (semicolon-separated)
+  - Maps FileDataIDs to actual file paths
+  
+- **Retail DB2 Tables** (CSV format, `[table].[version].csv` or `[table].csv)
+  - Required tables:
+    - `SoundKit.csv` or `SoundKit.[version].csv`
+    - `SoundKitEntry.csv`
+    - `CreatureDisplayInfo.csv`
+    - `CreatureModelData.csv`
+    - `CreatureSoundData.csv`
+    - `NPCSounds.csv`
+    - `FootstepTerrainLookup.csv`
+    - `ZoneMusic.csv`
+    - `ZoneIntroMusicTable.csv`
+    - `VocalUISounds.csv`
+    - `SoundProviderPreferences.csv`
+    - `SoundFilter.csv`
+    - `SoundFilterElem.csv`
+    - `SoundEmitters.csv`
+    - `SoundAmbience.csv`
+    - `WeaponImpactSounds.csv`
+    - `ParticleColor.csv`
+    - `ObjectEffect.csv`
+    - `ObjectEffectModifier.csv`
+    - `ObjectEffectPackageElem.csv`
+    - `SoundKitAdvanced.csv`
+    - `CreatureDisplayInfoGeosetData.csv` (for CreatureGeosetData calculation I used : Σ(GeosetValue × 16^GeosetIndex), meaning that you may have to edit the .m2 that have GeosetIndex is > 8 (WoW Blender Studio)
