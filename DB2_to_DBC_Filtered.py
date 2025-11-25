@@ -2448,6 +2448,7 @@ def main():
                     print(f"\nFiltering ObjectEffect for {len(filtered_object_effect_group_ids)} ObjectEffectGroupID(s)...")
                     
                     # From SoundEntries to get names for ObjectEffect
+                    
                     sound_entries_for_object_effect = []
                     sound_entries_path = os.path.join(OUTPUT_DIR, "SoundEntries.csv")
                     if os.path.exists(sound_entries_path):
@@ -2749,6 +2750,94 @@ def main():
                     if value and key != 'ID':
                         print(f"  {key}: {value}")
                 print()
+            
+            # STEP 9.5: Update ObjectEffect names now that SoundEntries exists
+            print("\n" + "=" * 60)
+            print("=== UPDATING OBJECTEFFECT NAMES ===")
+            print("=" * 60)
+            
+            object_effect_path = os.path.join(OUTPUT_DIR, "ObjectEffect.csv")
+            if os.path.exists(object_effect_path):
+                print("Updating ObjectEffect with SoundEntries names...")
+                
+                # Create name lookup from sound_entries
+                sound_name_lookup = {entry['ID']: entry.get('Name', '') for entry in sound_entries}
+                
+                # Read ObjectEffect
+                updated_object_effects = []
+                with open(object_effect_path, 'r', encoding='utf-8') as f:
+                    reader = csv.DictReader(f)
+                    for row in reader:
+                        effect_rec_id = row.get('EffectRecID', '').strip()
+                        if effect_rec_id in sound_name_lookup:
+                            row['Name'] = sound_name_lookup[effect_rec_id]
+                        updated_object_effects.append(row)
+                
+                # Write back ObjectEffect with names
+                write_object_effect(object_effect_path, updated_object_effects, wdbx_format)
+                print(f"Updated {len(updated_object_effects)} ObjectEffect entries with names")
+                
+                # Update ObjectEffectGroup names based on updated ObjectEffect
+                print("Updating ObjectEffectGroup names...")
+                group_names = {}
+                for effect in updated_object_effects:
+                    group_id = effect.get('ObjectEffectGroupID', '').strip()
+                    name = effect.get('Name', '').strip()
+                    if group_id and name and group_id not in group_names:
+                        group_names[group_id] = name
+                
+                # Read and update ObjectEffectGroup
+                object_effect_group_path = os.path.join(OUTPUT_DIR, "ObjectEffectGroup.csv")
+                if os.path.exists(object_effect_group_path):
+                    updated_groups = []
+                    with open(object_effect_group_path, 'r', encoding='utf-8') as f:
+                        reader = csv.DictReader(f)
+                        for row in reader:
+                            group_id = row.get('ID', '').strip()
+                            if group_id in group_names:
+                                row['Name'] = group_names[group_id]
+                            updated_groups.append(row)
+                    
+                    # Write back ObjectEffectGroup
+                    write_object_effect_group(object_effect_group_path, updated_groups, wdbx_format)
+                    print(f"Updated {len(updated_groups)} ObjectEffectGroup entries with names")
+                
+                # Update ObjectEffectPackage names based on updated ObjectEffectGroup
+                print("Updating ObjectEffectPackage names...")
+                object_effect_package_path = os.path.join(OUTPUT_DIR, "ObjectEffectPackage.csv")
+                if os.path.exists(object_effect_package_path):
+                    updated_packages = []
+                    with open(object_effect_package_path, 'r', encoding='utf-8') as f:
+                        reader = csv.DictReader(f)
+                        for row in reader:
+                            # Names come from groups, which we just updated
+                            updated_packages.append(row)
+                    
+                    # Regenerate names from updated groups
+                    package_elem_path = os.path.join(OUTPUT_DIR, "ObjectEffectPackageElem.csv")
+                    if os.path.exists(package_elem_path):
+                        package_names = {}
+                        with open(package_elem_path, 'r', encoding='utf-8') as f:
+                            reader = csv.DictReader(f)
+                            for row in reader:
+                                package_id = row.get('ObjectEffectPackageID', '').strip()
+                                group_id = row.get('ObjectEffectGroupID', '').strip()
+                                if package_id and group_id in group_names:
+                                    if package_id not in package_names:
+                                        package_names[package_id] = group_names[group_id]
+                        
+                        # Update package names
+                        for pkg in updated_packages:
+                            pkg_id = pkg.get('ID', '').strip()
+                            if pkg_id in package_names:
+                                pkg['Name'] = package_names[pkg_id]
+                        
+                        write_object_effect_package(object_effect_package_path, updated_packages, wdbx_format)
+                        print(f"Updated {len(updated_packages)} ObjectEffectPackage entries with names")
+                
+                print("ObjectEffect chain names updated successfully!")
+            else:
+                print("NOTE: ObjectEffect.csv not found, skipping name update")
             
             # STEP 10: Generate SoundEntriesAdvanced
             print("\n" + "=" * 60)
