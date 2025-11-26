@@ -2578,6 +2578,32 @@ def main():
     print("Collecting SoundKit IDs from generated files...")
     filtered_soundkit_ids = set()
     
+    # Check for M2 hardcoded SoundEntry IDs
+    m2_hardcoded_dir = "4_M2_Hardcoded_SoundEntry_ID"
+    m2_hardcoded_file = os.path.join(m2_hardcoded_dir, "M2_Hardcoded_SoundEntry_ID.csv")
+    m2_soundentry_ids = set()
+    
+    if os.path.exists(m2_hardcoded_file):
+        print(f"\n  Detected M2 hardcoded SoundEntry IDs: {m2_hardcoded_file}")
+        print("  Loading hardcoded SoundEntry IDs from M2 files...")
+        with open(m2_hardcoded_file, 'r', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                sound_entry_id = row.get('SoundEntryID', '').strip()
+                if sound_entry_id and sound_entry_id != '0':
+                    m2_soundentry_ids.add(sound_entry_id)
+        print(f"  Found {len(m2_soundentry_ids)} unique SoundEntry IDs from M2 files: {sorted(m2_soundentry_ids)}")
+        
+        # These are SoundEntry IDs, we need to find corresponding SoundKit IDs
+        # We'll use them directly as IDs since SoundEntry ID = SoundKit ID in the retail-to-wotlk conversion
+        print("  Adding as SoundKit IDs for processing...")
+        for sound_id in m2_soundentry_ids:
+            filtered_soundkit_ids.add(sound_id)
+        print(f"  Added {len(m2_soundentry_ids)} SoundKit IDs from M2 hardcoded sounds")
+    else:
+        print(f"\n  No M2 hardcoded SoundEntry IDs found (checked: {m2_hardcoded_file})")
+        print("  Tip: Run m2_Hardcoded_SoundEntry_ID_extractor.py first to extract hardcoded sounds from .m2 files")
+    
     # From CreatureSoundData
     creature_sound_path = os.path.join(OUTPUT_DIR, "CreatureSoundData.csv")
     if os.path.exists(creature_sound_path):

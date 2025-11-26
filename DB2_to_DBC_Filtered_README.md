@@ -46,7 +46,7 @@ Required files (must contain these table names, version numbers may vary):
 
 DIRECTORY: 1_DBCWotlk_csv/
 ---------------------------
-Optional file:
+Optional files:
 
 1. Wotlk_SoundEntries.csv
    - If present, user is prompted to choose naming method:
@@ -57,6 +57,25 @@ Optional file:
 2. CreatureDisplayInfo.csv
    - WotLK CreatureDisplayInfo data
    - Used to get BloodLevel values for downporting
+
+
+DIRECTORY: 4_M2_Hardcoded_SoundEntry_ID/ (Optional but Recommended)
+--------------------------------------------------------------------
+This directory is automatically created by m2_Hardcoded_SoundEntry_ID_extractor.py
+
+1. M2_Hardcoded_SoundEntry_ID.csv
+   - If present, SoundEntry IDs are automatically included in Step 9
+   - Contains hardcoded sound events from .m2 model files
+   - Format: Filename, EventType, SoundEntryID, M2Offset
+   
+WORKFLOW INTEGRATION:
+   1. Run m2_Hardcoded_SoundEntry_ID_extractor.py on your .m2 files first
+   2. Run DB2_to_DBC_Filtered.py (automatically detects and uses the M2 data)
+   
+If this file is NOT present:
+   - Script displays a tip suggesting to run the M2 extractor first
+   - Only DB2-referenced sounds will be included
+   - Hardcoded M2 sounds may be missing from output
 
 
 ================================================================================
@@ -206,7 +225,12 @@ STEP 8: ObjectEffect Chain (4 tables)
 - 8e: ObjectEffectPackage - generated from validated elements
 
 STEP 9: SoundEntries
+- M2 Integration: Automatically detects and includes hardcoded SoundEntry IDs
+  * Checks for 4_M2_Hardcoded_SoundEntry_ID/M2_Hardcoded_SoundEntry_ID.csv
+  * If found: adds all hardcoded SoundEntry IDs from .m2 files
+  * If not found: displays tip to run m2_Hardcoded_SoundEntry_ID_extractor.py first
 - Collects SoundKit IDs from:
+  * M2 hardcoded sounds (if available)
   * CreatureSoundData (all sound fields)
   * FootstepTerrainLookup (SoundID, SoundIDSplash)
   * NPCSounds (SoundID_1/2/3/4)

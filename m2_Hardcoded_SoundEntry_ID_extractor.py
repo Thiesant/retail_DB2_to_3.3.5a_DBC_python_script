@@ -140,21 +140,23 @@ class M2Parser:
     
     def calculate_m2track_size(self, offset: int) -> int:
         """
-        Return M2Track structure size.
+        Return M2Track structure size for Event Timer field.
         
-        NOTE: Currently returns a fixed 20 bytes (the base M2Track structure size).
-        This assumes the M2Track structure itself is always 20 bytes, which appears
-        to be true based on the M2.bt template structure:
+        The M2Track in Events is always 12 bytes for ALL formats (MD20 and MD21):
         - uint16 interpolation_type (2 bytes)
         - int16 global_sequence (2 bytes)
-        - M2Array timestamps (uint32 count + uint32 offset = 8 bytes)
-        - M2Array values (uint32 count + uint32 offset = 8 bytes)
-        Total: 2 + 2 + 8 + 8 = 20 bytes
+        - uint32 nTimestampPairs (4 bytes)
+        - uint32 ofsTimestampPairs (4 bytes)
+        Total: 2 + 2 + 4 + 4 = 12 bytes
         
-        The actual timestamp and value DATA is stored elsewhere (referenced by offsets),
+        This gives total Event structure size of 36 bytes:
+        - 24 bytes (Identifier + Data + ParentBone + Position)
+        - 12 bytes (M2Track Timer)
+        
+        The actual timestamp DATA is stored elsewhere (referenced by ofsTimestampPairs),
         not inline in the Event structure.
         """
-        return 20
+        return 12  # Always 12 bytes for Event Timer
     
     def parse_event(self, offset: int) -> Optional[Dict]:
         """Parse a single event structure"""

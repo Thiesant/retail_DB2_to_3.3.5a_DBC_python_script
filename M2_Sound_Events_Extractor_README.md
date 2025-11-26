@@ -67,12 +67,11 @@ model2.m2
 
 ## Event Types
 
-| Event ID |    Description     |          Usage          |
-|----------|--------------   ---|-------------------------|
-|  `$CSD`  | PlayEmoteSound     | Character emote sounds  |
-|  `$DSL`  | GameObject Sound   | Doodad/object sounds    |
-|  `$DSO`  | DoodadSoundOneShot | One-shot doodad sounds  |
-|  `$SND`  | PlaySoundKit       | Custom sound kits       |
+
+ `$CSD` : PlayEmoteSound    
+ `$DSL` : GameObject Sound  
+ `$DSO` : DoodadSoundOneShot
+ `$SND` : PlaySoundKit      
 
 ## Console Output
 
@@ -145,24 +144,6 @@ Note: The actual timestamp/value data is stored elsewhere (referenced by offsets
 ### DBC Downporting Workflow
 1. m2_Hardcoded_SoundEntry_ID_extractor.py Run extractor on your M2 file/directory
 2. run DB2_to_DBC_Filtered.py to generate related models downport dbc
-
-### Python Integration
-```python
-import csv
-
-# Read extracted sound IDs
-sound_ids = set()
-with open('4_M2_Hardcoded_SoundEntry_ID/M2_Hardcoded_SoundEntry_ID.csv', 'r') as f:
-    reader = csv.DictReader(f)
-    for row in reader:
-        sound_ids.add(int(row['SoundEntryID']))
-
-# Merge with your existing DB2 data
-all_sound_ids = db2_sound_ids | sound_ids
-
-# Generate DBC
-generate_soundentries_dbc(all_sound_ids)
-```
 
 ## Notes
 
