@@ -1,275 +1,238 @@
-# retail_DB2_to_3.3.5a_DBC_python_script
+# WoW Retail DB2 to WotLK 3.3.5a DBC Converter Suite
 
-## Description
-This Python script converts World of Warcraft Retail .DB2 to WotLK 3.3.5a .DBC format.
+A collection of Python tools for downporting World of Warcraft Retail (11.0+) database files to WotLK 3.3.5a DBC format, with support for creature models, sounds, and visual effects.
 
-Check Output sections to see which one are covered in this readme.md.
+## 🎯 Quick Overview
 
-## Requirements
+This suite contains three complementary tools:
 
-### Python Version
-- **Python 3.6 or higher**
+1. **M2 Sound Events Extractor** - Extract hardcoded sound IDs from .m2 model files
+2. **Full DB2 to DBC Converter** - Convert complete retail DB2 datasets to WotLK format  
+3. **Filtered DB2 to DBC Converter** - Generate minimal DBC subsets for specific creature models
 
-### Python Standard Libraries
-All required libraries are part of Python's standard library:
-- `os` - File and directory operations
-- `csv` - CSV file reading/writing
-- `pathlib` - Path handling
-- `collections.defaultdict` - Data grouping
+## 📦 Tools
 
-### Setup Directory Structure
+### 1. M2 Sound Events Extractor
+**File:** `m2_Hardcoded_SoundEntry_ID_extractor.py`
+
+Extracts hardcoded SoundEntry IDs from M2 model files that aren't present in DB2 data.
+
+**Usage:**
+```bash
+# Single file
+python m2_Hardcoded_SoundEntry_ID_extractor.py /path/to/models/model.m2
+
+# Entire directory (recursive)
+python m2_Hardcoded_SoundEntry_ID_extractor.py /path/to/models/
+```
+
+**Output:** `4_M2_Hardcoded_SoundEntry_ID/M2_Hardcoded_SoundEntry_ID.csv`
+
+📖 **[Full Documentation](M2_Sound_Events_Extractor_README.md)**
+
+---
+
+### 2. Filtered DB2 to DBC Converter
+**File:** `DB2_to_DBC_Filtered.py`
+
+Creates minimal DBC subsets for specific creature models you select.
+
+**Features:**
+- Interactive model selection (search by FileID or name)
+- Generates only necessary data for selected models
+- Automatically integrates M2 hardcoded sounds
+- **Downloads audio files** from Wago.tools automatically
+- Ideal for testing or partial conversions
+
+**Usage:**
+```bash
+python DB2_to_DBC_Filtered.py
+```
+
+**Output:** 
+- `3_DBC_Filtered/` (up to 14 CSV files + filtered listfile)
+- `5_Downloaded_Sounds/` (audio files organized by folder structure)
+
+📖 **[Full Documentation](DB2_to_DBC_Filtered_README.md)**
+
+---
+
+### 3. Full DB2 to DBC Converter
+**File:** `DB2_to_DBC.py`
+
+Converts complete retail DB2 datasets to WotLK 3.3.5a DBC format. Use this when you need complete DBC resources or want to create a comprehensive sound patch.
+
+**Features:**
+- Processes 22 different DBC tables
+- Converts FileDataIDs to file paths
+- Optional WotLK naming preservation
+- WDBX Editor format support
+
+**Usage:**
+```bash
+python DB2_to_DBC.py
+```
+
+**Output:** `2_DBCRetail_to_Wotlk_csv/` (22 CSV files)
+
+📖 **[Full Documentation](DB2_to_DBC_README.md)**
+
+---
+
+## 🔄 Recommended Workflow
+
+### For Specific Models (Most Common)
+```
+1. Run m2_Hardcoded_SoundEntry_ID_extractor.py → Extract M2 sounds
+2. Run DB2_to_DBC_Filtered.py → Select models + generate minimal DBCs + download sounds
+```
+
+### For Complete DBC Resources / Mega Sound Patch
+```
+1. Run m2_Hardcoded_SoundEntry_ID_extractor.py → Extract M2 sounds (optional but recommended)
+2. Run DB2_to_DBC.py → Full DBC dataset (all 22 tables)
+```
+
+## 📁 Required Directory Structure
+
 ```
 /
-├── DB2_to_DBC.py
-├── 0_Input/
-│   ├──Community-listifle (https://github.com/wowdev/wow-listfile)
-│   └──`[table].[version]`.csv (https://wago.tools/db2)
-├── 1_DBCWotlk_csv/
-│   ├──Wotlk-CreatureDisplayInfo.csv #`BloodLevel` entries for CreatureDisplayInfo)
-│   ├──Wotlk_VocalUISounds.csv   #`PissedSoundID_1`,`PissedSoundID_2` entries for VocalUISounds
-│   └── Wotlk_SoundEntries.csv        # WotLK reference used for SounEntries wotlk names
-└── 2_DBCRetail_to_Wotlk_csv/          # Output with downported .csv
-````
-
-The script requires three directories in the same folder as the script:
-
-#### 1. `0_Input/` - Retail DBC/DB2 Data (Required)
-Must contain:
-- **Listfile CSV** (any filename containing "listfile", case-insensitive)
-  - Format: `FileDataID;FilePath` (semicolon-separated)
-  - Maps FileDataIDs to actual file paths
-  
-- **Retail DB2 Tables** (CSV format, `[table].[version].csv` or `[table].csv)
-  - Required tables:
-    - `SoundKit.csv` or `SoundKit.[version].csv`
-    - `SoundKitEntry.csv`
-    - `CreatureDisplayInfo.csv`
-    - `CreatureModelData.csv`
-    - `CreatureSoundData.csv`
-    - `NPCSounds.csv`
-    - `FootstepTerrainLookup.csv`
-    - `ZoneMusic.csv`
-    - `ZoneIntroMusicTable.csv`
-    - `VocalUISounds.csv`
-    - `SoundProviderPreferences.csv`
-    - `SoundFilter.csv`
-    - `SoundFilterElem.csv`
-    - `SoundEmitters.csv`
-    - `SoundAmbience.csv`
-    - `WeaponImpactSounds.csv`
-    - `ParticleColor.csv`
-    - `ObjectEffect.csv`
-    - `ObjectEffectModifier.csv`
-    - `ObjectEffectPackageElem.csv`
-    - `SoundKitAdvanced.csv`
-    - `CreatureDisplayInfoGeosetData.csv` (for CreatureGeosetData calculation I used : Σ(GeosetValue × 16^GeosetIndex), meaning that you may have to edit the .m2 that have GeosetIndex is > 8 (WoW Blender Studio)
-
-#### 2. `1_DBCWotlk_csv/` - WotLK Reference Data (Optional)
-- **`Wotlk_SoundEntries.csv`**
-  - Used when you select "yes" to using WotLK names
-  - If provided, matching IDs will use original WotLK names instead of generated names
-
-#### 3. `2_DBCRetail_to_Wotlk_csv/` - Output Directory
-- This directory will be **automatically created** by the script
-- All converted DBC files will be saved here
-
-### File Format Notes
-- All input CSV files should be UTF-8 encoded
-- CSV files can have version numbers in their names (e.g., `SoundKit.11.2.5.64502.csv`)
-- The script will automatically find the correct file regardless of version numbering
-
-## How to Use
-
-### 1. Check files
-Get the db2 version you want from wago.tools and put them in 0_Input
-Get listfile from the listfile-community
-Don't use duplicated tables with different version
-
-### 2. Run the Script
-Open terminal in scripts folder and use 
-
-py DB2_to_DBC.py
-
-### 3. Answer Configuration Prompts
-
-The script will ask three questions:
-
-#### Prompt 1: WotLK Names
+├── DB2_to_DBC.py                      # Python script
+├── DB2_to_DBC_Filtered.py                      # Python script
+├── DB2_to_DBC.py                      # Python script
+├── 0_Input/                           # Input files (required)
+│   ├── listfile.csv                   # Community listfile
+│   └── [Table].[version].csv          # DB2 tables from wago.tools
+├── 1_DBCWotlk_csv/                    # WotLK reference data (optional)
+│   ├── Wotlk_SoundEntries.csv
+│   ├── Wotlk_VocalUISounds.csv
+│   └── Wotlk_CreatureDisplayInfo.csv
+├── 2_DBCRetail_to_Wotlk_csv/          # Full converter output
+├── 3_DBC_Filtered/                    # Filtered converter output
+├── 4_M2_Hardcoded_SoundEntry_ID/      # M2 extractor output
+└── 5_Downloaded_Sounds/               # Downloaded audio files (filtered converter)
 ```
-Use WoW 3.3.5a (WotLK) SoundEntries names? (y/n):
+
+## 📋 Requirements
+
+### Python Environment
+- **Python 3.6+**
+- **Standard library only** for most features
+- **Optional:** `requests` module (for audio download feature in Filtered converter)
+
+### Installing Optional Dependencies
+```bash
+# For audio download feature (Filtered converter only)
+pip install requests
 ```
-- **Yes**: Use original WotLK names from `Wotlk_SoundEntries.csv` where available
-  - Matching IDs will preserve their original WotLK names
-  - New IDs will have generated names based on file paths
-- **No**: Generate all names from file paths (File_1)
-  - All names will be auto-generated from the first audio file
 
-#### Prompt 2: WDBX Format
-```
-Format CSV for WDBX Editor? (quotes all fields, converts decimals . to ,) (y/n):
-```
-- **Yes**: Format for WDBX Editor compatibility
-  - All fields will be quoted
-  - Decimal separators changed from `.` to `,` (e.g., `1.5` → `1,5`)
-- **No**: Standard CSV format
-  - Minimal quoting
-  - Standard decimal notation with periods
+**Note:** If `requests` is not installed, the Filtered converter will skip the download feature and only generate CSV files.
 
-#### Prompt 3: Terrain Filtering
-```
-Filter FootstepTerrainLookup to WotLK-compatible terrain types only? (recommended) (y/n):
-```
-- **Yes** (recommended): Only include terrain types that exist in WotLK
-  - Prevents incompatible terrain types from causing issues
-- **No**: Include all terrain types from Retail
-  - May cause issues with terrain types that don't exist in WotLK (most likely that game will crashes)
+### Required Input Files
 
-### 4. Processing
+**0_Input/ directory must contain:**
+- Listfile CSV (from [wow-listfile](https://github.com/wowdev/wow-listfile))
+- DB2 tables in CSV format (from [wago.tools](https://wago.tools/db2))
 
-The script will:
-1. Load and parse all input files
-2. Process each DBC table
-3. Generate converted output files
-4. Create log files for any issues found
-5. Display progress and samples
+**Required tables** (minimum for core functionality):
+- SoundKit, SoundKitEntry, SoundKitAdvanced
+- CreatureDisplayInfo, CreatureModelData, CreatureSoundData
+- CreatureDisplayInfoGeosetData
+- NPCSounds, FootstepTerrainLookup
+- ParticleColor
+- ObjectEffect, ObjectEffectModifier, ObjectEffectPackageElem
+- And more (see individual tool documentation)
 
-### 5. Review Output
+## 🎮 Output Format
 
-Check the `2_DBCRetail_to_Wotlk_csv/` folder for:
-- **22 converted DBC CSV files** (ready for WotLK)
-- **Log files** (if any issues were found)
+All tools generate **CSV files** compatible with:
+- **WDBX Editor** (optional format with quoted fields)
+- **Standard CSV** readers
+- **WotLK 3.3.5a** DBC structure
 
-#### Log Files
-The script may generate log files for issues that need manual review:
+## 🎵 Audio File Download (Filtered Converter Only)
 
-- **`SoundEntries.log`** - FileDataIDs not found in listfile (for audio files)
-- **`SoundEntries_SoundKit.log`** - Missing SoundKit data (defaults applied)
-- **`CreatureModelData.log`** - Model FileDataIDs not in listfile
-- **`CreatureDisplayInfo_Textures.log`** - Texture FileDataIDs not in listfile
-- **`CreatureDisplayInfo_GeosetOverflow.log`** - Geoset calculations exceeding limits
-- **`ObjectEffect.log`** - Entries with EffectRecID = 0 (skipped)
-- **`ObjectEffectPackageElem.log`** - Invalid ObjectEffectGroupID references
+The **Filtered DB2 to DBC Converter** includes an automatic sound download feature:
 
-**Review these logs** to identify missing listfile entries or data issues.
+**Requirements:**
+- Python `requests` module (install with: `pip install requests`)
+- If not installed, the script will skip downloading and only generate CSV files
 
-## Output Files
+**Features:**
+- Downloads audio files directly from Wago.tools
+- Organizes files by folder structure (preserves hierarchy)
+- Skips already downloaded files
+- Shows download progress and success rate
+- Provides locale installation instructions
 
-### Downported DBC Files from Retail to WotLK 3.3.5a
+**Output Directory:** `5_Downloaded_Sounds/`
 
-The script generates **22 CSV files** compatible with WotLK 3.3.5a:
+**Locale Information:**
+- Downloaded sounds are in **enUS locale**
+- Most sounds go to `wow\data\` (music, creatures, spells, effects)
+- Locale-specific sounds to `wow\data\[locale]\` (voices, NPC dialogue)
 
-#### Current DBC wotlk downport list featured (22 files)
-1. **SoundEntries.csv** - Main sound definitions
-   - Merged from: SoundKit + SoundKitEntry
-   - Maps FileDataIDs to audio file paths
-   - Includes volume, distance, and audio settings
+This feature makes it easy to get all necessary audio files for your filtered models in one step!
+Though, if you need to use other locale sounds, then don't put the localized sounds in wow\data but in wow\data\[locale]
+else main data will have priority over locale and you'll have english localized sound from wow.tools instead of your locale.
 
-2. **SoundEntriesAdvanced.csv** - Advanced sound parameters
-   - Source: SoundKitAdvanced
+The download option does not feature other locale, you'll have to use wow.export or casc explorer for them.
 
-3. **CreatureSoundData.csv** 
-   - Creature audio events
-   ( Attack, death, aggro, footstep, Fidget sounds and custom attacks etc.)
+## 🔍 What Gets Converted
 
-4. **NPCSounds.csv**
-   - NPC vocal sound references
+### Covered Systems (22 DBC Tables)
+✅ **Creature Sounds** - Attack, death, aggro, fidget, footsteps  
+✅ **NPC Vocals** - Voice-overs and speech  
+✅ **Ambient Sounds** - Day/night zone ambience  
+✅ **Zone Music** - Background and intro music  
+✅ **UI Sounds** - Vocal UI  
+✅ **Weapon Sounds** - Impact sounds  
+✅ **Emitters** - World sound emitters  
+✅ **Effects** - Particle colors, object effects related sounds 
+✅ **Creature Display** - Models, textures, geosets  
 
-5. **SoundAmbience.csv**
-   - Ambient sound zones
-   - Day and night ambient sound IDs
+### Key Features
+- **FileDataID → File Path** conversion
+- **MD20/MD21** M2 format support
+- **Recursive sound data** collection
+- **Geoset calculation** for creature models
+- **Texture mapping** for creature skins
+- **Audio file downloads** to make .mpq patch faster
+- **Terrain-based footsteps** (WotLK-compatible filtering)
+- **Object effect chains** (state-based sounds, will filter missing SoundEntries ID to avoid game crash)
 
-6. **SoundEmitters.csv**
-   - World sound emitters
+## 📊 Version Compatibility
 
-7. **SoundProviderPreferences.csv**
-   - Audio provider settings and priorities
+- **Source:** WoW Retail 11.0+ (tested with 11.2.5)
+- **Target:** WoW 3.3.5a (Wrath of the Lich King)
+- **Tested:** Python 3.14
 
-8. **SoundFilter.csv**
+## 🚨 Important Notes
 
-9. **SoundFilterElem.csv**
+- **M2 extractor should run first** for best results (detects hardcoded sounds)
+- **Filtered converter auto-detects** M2 extractor output
+- **Log files generated** for unmapped FileDataIDs and data issues
+- **Review logs** to identify missing listfile entries
 
-10. **ZoneMusic.csv**
-    - Zone background music
-    - Day/night music per zone
+## 📖 Detailed Documentation
 
-11. **ZoneIntroMusicTable.csv**
-    - Zone intro music
-    - Music played when entering zones
+Each tool has comprehensive documentation:
 
-12. **VocalUISounds.csv**
-    - UI voice-overs (bag full, etc.)
+- **[DB2_to_DBC_README.md](DB2_to_DBC_README.md)** - Full converter guide
+- **[DB2_to_DBC_Filtered_README.md](DB2_to_DBC_Filtered_README.md)** - Filtered converter guide  
+- **[M2_Sound_Events_Extractor_README.md](M2_Sound_Events_Extractor_README.md)** - M2 extractor guide
 
-13. **WeaponImpactSounds.csv**
-    - Weapon impact sounds, duuh
+## 🙏 Credits
 
-14. **FootstepTerrainLookup.csv**
-    - Links terrain types to footstep sound IDs
-    - Optionally filtered to WotLK terrain types only
+- **Blizzard Entertainment** - World of Warcraft
+- **[wow-listfile](https://github.com/wowdev/wow-listfile)** - Community listfile
+- **[wago.tools](https://wago.tools/)** - DB2 data extraction
+- **Alastor Strix'Efuartus** - M2.bt template (010 Editor)
 
-15. **CreatureDisplayInfo.csv**
+## 📝 License
 
-16. **CreatureModelData.csv**
+This project is provided as-is for World of Warcraft modding and research purposes.
 
-17. **ParticleColor.csv**
+---
 
-18. **ObjectEffect.csv**
-
-19. **ObjectEffectModifier.csv**
-
-20. **ObjectEffectGroup.csv**
-
-21. **ObjectEffectPackage.csv**
-
-22. **ObjectEffectPackageElem.csv**
-
-### Key Features of Output Files
-
-**All files sorted by ID** (smallest to largest)
-**FileDataIDs converted** file names and absolute paths
-**Option to use WotLK sound entries name** entries from later expansion have generated name
-**Header adjusted** to match WDBX 1.1.9.a
-**File extensions updated** (.m2 → .mdx for CreatureModelData)
-**Path separators normalized** (/ → \\)
-**Option to skip some entries** (FootstepTerrainLookup is limited to TerrainSoundID from 0 to 10, using above id will crash the client without changes to the game)
-**Option to format csv for WDBX Editor** (when enabled : quote all fields and convert float fields from . to ,)
-
-## Troubleshooting
-
-### Common Issues
-
-**"ERROR: No listfile found in 0_Input"**
-- Ensure you have a CSV file with "listfile" in its name in the `0_Input/` folder
-- Check that the file has a `.csv` extension
-
-**"WARNING: [TableName] table not found"**
-- The script will skip that table and continue (not recommended)
-- Some tables are optional (e.g., SoundKitAdvanced)
-- All .db2 input should be present for best results
-
-**Generated log files**
-- Review any `.log` files in the script directory
-- These identify FileDataIDs that couldn't be mapped to file paths (most likely missing from community-listfile), missing SoundKit entry settings (resort to arbitrary default settings), skipped EffectRecID = 0 (to avoid crash on start up)
-- You may need to update your listfile or manually correct these entries
-
-**Empty output files**
-- Check that your input CSV files have data
-- Verify CSV files are properly formatted
-- Ensure character encoding is UTF-8
-
-### Performance Notes
-
-- Processing time depends on the size of input files
-- Large listfiles (100,000+ entries) may take around 1 min to generate all .csv
-- The script provides progress output for each processing step
-
-## Version Compatibility
-
-- **Source**: World of Warcraft Retail (any modern expansion should work but script was tested with 11.0+ retail version)
-- **Target**: World of Warcraft 3.3.5a (Wrath of the Lich King)
-- **Tested with**: Python 3.14
-
-## Credits
-
-- Blizzard
-- https://github.com/wowdev/wow-listfile
-- https://wago.tools/
+**Questions?** Check the individual tool documentation or review the generated log files for troubleshooting.

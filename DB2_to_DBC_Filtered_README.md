@@ -7,6 +7,26 @@ This script generates a filtered subset of World of Warcraft DBC files based on
 selected creature models. Unlike the full DB2_to_DBC.py converter, this creates 
 only the data needed for specific models you choose.
 
+FEATURES:
+- Interactive model selection (search by FileID or name)
+- Generates minimal DBC subset for selected models
+- Automatically integrates M2 hardcoded sounds
+- Downloads audio files from Wago.tools (requires requests module)
+- Ideal for testing or partial conversions
+
+================================================================================
+REQUIREMENTS
+================================================================================
+
+PYTHON VERSION:
+- Python 3.6 or higher
+
+PYTHON MODULES:
+- Standard library (os, csv, pathlib, etc.) - included with Python
+- requests module - OPTIONAL, for audio download feature
+  * Install with: pip install requests
+  * If not installed, script will skip downloading and only generate CSV files
+
 ================================================================================
 REQUIRED INPUT FILES
 ================================================================================
@@ -156,6 +176,46 @@ UTILITY FILE:
       * Audio FileIDs (from SoundEntries)
 
 
+DIRECTORY: 5_Downloaded_Sounds/ (Optional - requires requests module)
+----------------------------------------------------------------------
+Downloaded audio files organized by folder structure (preserves hierarchy):
+
+AUTOMATIC DOWNLOAD FEATURE:
+- After CSV generation, script offers to download audio files from Wago.tools
+- Files are organized in their original folder structure
+- Already downloaded files are automatically skipped
+- Shows download progress and success rate
+
+LOCALE INFORMATION:
+- Downloaded sounds are in enUS locale from Wago.tools
+- Installation paths:
+  * Most sounds → wow\data\ (music, creatures, spells, effects)
+  * Locale-specific sounds → wow\data\[locale]\ (character voices, NPC dialogue)
+
+EXAMPLE STRUCTURE:
+5_Downloaded_Sounds/
+  ├── Sound/
+  │   ├── Creature/
+  │   │   └── Murloc/
+  │   │       ├── MurlocAggro01.ogg
+  │   │       └── MurlocDeath01.ogg
+  │   └── Music/
+  │       └── ZoneMusic/
+  │           └── Elwynn.mp3
+  └── [other sound folders...]
+
+REQUIREMENTS:
+- Python requests module must be installed (pip install requests)
+- Internet connection to Wago.tools
+- Sufficient disk space for audio files
+
+USER PROMPT:
+After CSV generation completes, you will be asked:
+"Download audio files from Wago.tools? (requires requests module) (y/n):"
+  - y: Downloads all audio files referenced in filtered SoundEntries
+  - n: Skips downloading, only CSV files are generated
+
+
 ================================================================================
 LOG FILES (Generated in script directory when issues found)
 ================================================================================
@@ -250,6 +310,15 @@ FINAL: Filtered Listfile
 - Aggregates all FileIDs used across all steps
 - Includes models, textures, and audio files
 
+STEP 12: Audio Download (Optional)
+- Requires: requests module (pip install requests)
+- Downloads audio files from Wago.tools based on filtered SoundEntries
+- Organizes files in 5_Downloaded_Sounds/ directory
+- Preserves folder structure from listfile paths
+- Skips already downloaded files
+- Shows progress: downloaded count, failed count, skipped count
+- Provides locale installation instructions
+
 
 ================================================================================
 USER PROMPTS
@@ -272,6 +341,15 @@ USER PROMPTS
    
    If multiple matches found:
    "Enter selection (space-separated numbers, e.g., '1 3 4', or 'all' for all models):"
+
+4. Audio Download (after CSV generation):
+   "Download audio files from Wago.tools? (requires requests module) (y/n):"
+   - y: Downloads all audio files to 5_Downloaded_Sounds/ directory
+   - n: Skips downloading (only CSV files generated)
+   
+   If requests module not installed:
+   - Script will display error and skip download feature
+   - Install with: pip install requests
 
 
 ================================================================================
@@ -298,6 +376,7 @@ Listfile Format:
 NOTES
 ================================================================================
 
+GENERAL:
 - The script creates the 3_DBC_Filtered directory if it doesn't exist
 - All log files are created in the script's directory (not in output folder)
 - Log files use "_filtered" suffix to distinguish from full converter logs
@@ -305,6 +384,15 @@ NOTES
 - Missing optional files result in warnings but don't stop execution
 - Empty or "0" ID values are skipped during filtering
 - All output is sorted by ID for consistency
+
+AUDIO DOWNLOAD:
+- Download feature is optional and requires requests module
+- The 5_Downloaded_Sounds directory is created automatically if downloading
+- Files are organized in their original folder structure from listfile
+- Already downloaded files are skipped (saves time on re-runs)
+- Download failures are logged but don't stop the process
+- Downloaded files are enUS locale (from Wago.tools)
+- No authentication required - files are publicly available
 
 
 ================================================================================
@@ -329,6 +417,19 @@ TROUBLESHOOTING
 - DB2 structure may have changed between versions
 - Script expects specific column names (case-insensitive)
 
+"Download failed / requests module not found":
+- Install requests module: pip install requests
+- Check internet connection to Wago.tools
+- Some files may not be available on Wago.tools (normal, will be logged)
+- Script continues if download fails, CSV files are still generated
+
+"Downloaded files not working in WoW":
+- Verify file paths match WoW directory structure
+- Verify your .dbc
+- Most sounds go to wow\data\patch-x.mpq directory
+- Locale-specific sounds to wow\data\[locale]\patch-[locale]-x.mpq (e.g., wow\data\enUS\)
+- .ogg do WORKS in wow 3.3.5a however some codec version won't (eg. lavf55.33.100)
+
 
 ================================================================================
 DIFFERENCES FROM FULL DB2_to_DBC.py
@@ -339,13 +440,16 @@ FULL CONVERTER:
 - Output directory: 2_DBCRetail_to_Wotlk_csv
 - Generates complete WotLK-compatible DBC set
 - No user selection required
+- No audio download feature
 
 FILTERED CONVERTER (this script):
 - Processes ONLY selected models and related data
 - Output directory: 3_DBC_Filtered
 - Generates minimal subset for specific models
 - Requires user model selection
-- Ideal for testing specific models or partial conversions
+- Includes automatic audio download feature (optional, requires requests)
+- Downloads files to: 5_Downloaded_Sounds
+- Ideal for testing specific models
 
 
 ================================================================================

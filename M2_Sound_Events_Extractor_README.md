@@ -24,7 +24,7 @@ This script's M2 format parsing is based on the 010 Editor M2.bt template mainta
 
 ### Single File
 ```bash
-python m2_Hardcoded_SoundEntry_ID_extractor.py model.m2
+python m2_Hardcoded_SoundEntry_ID_extractor.py /path/to/models/model.m2
 ```
 Processes a single M2 file and generates output folder with CSV.
 
@@ -59,7 +59,7 @@ MD21 detected: 2
 The following files are using MD21 format.
 This indicates either:
   1. Legion+ (7.0+) models
-  2. Questioning 3.3.5a downport .m2
+  2. Questionable 3.3.5a downport .m2
 
 model1.m2
 model2.m2
@@ -94,7 +94,7 @@ Format: MD21, Version: 274, Chunked: True
     WARNING: MD21 format detected!
     This is either:
     1. A Legion+ (7.0+) model
-    2. A fucked up downport of a 3.3.5a .m2 file
+    2. A questionable downport of a 3.3.5a .m2 file
 
 Found 2 total events at offset 0xc520
   [0] $DSL: SoundEntryID=145678, Bone=3, Pos=(1.2, 0.0, -0.5)
@@ -142,8 +142,8 @@ Note: The actual timestamp/value data is stored elsewhere (referenced by offsets
 ## Integration Examples
 
 ### DBC Downporting Workflow
-1. m2_Hardcoded_SoundEntry_ID_extractor.py Run extractor on your M2 file/directory
-2. run DB2_to_DBC_Filtered.py to generate related models downport dbc
+1. Run `m2_Hardcoded_SoundEntry_ID_extractor.py` on your M2 file/directory
+2. Run `DB2_to_DBC_Filtered.py` to generate related models downport DBC
 
 ## Notes
 
@@ -164,5 +164,5 @@ Note: The actual timestamp/value data is stored elsewhere (referenced by offsets
 
 **Offset mismatches?**
 - Verify M2 file isn't corrupted
-- Script may need to be update
+- Script may need to be updated
 - Compare with 010 Editor using M2.bt template
