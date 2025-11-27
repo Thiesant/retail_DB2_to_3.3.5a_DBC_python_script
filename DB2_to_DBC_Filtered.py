@@ -224,12 +224,19 @@ def filter_sound_entries_advanced(soundkit_advanced_data, filtered_advanced_ids,
     
     return advanced_entries
 
-def write_sound_entries_advanced(output_path, advanced_entries, wdbx_format=False):
+def write_sound_entries_advanced(output_path, advanced_entries, wdbx_format=False, append_mode=False):
     """
     Write SoundEntriesAdvanced data to CSV file.
     If wdbx_format is True, quote all fields and convert float decimals from . to ,
     Sorts entries by ID.
     """
+    # Load existing data if in append mode
+    if append_mode:
+        existing_entries = load_existing_csv(output_path)
+        if existing_entries:
+            print(f"  → Merging with {len(existing_entries)} existing entry(ies)")
+            advanced_entries = merge_csv_entries(existing_entries, advanced_entries)
+    
     fieldnames = [
         'ID', 'SoundEntryID', 'InnerRadius2D', 'TimeA', 'TimeB', 'TimeC', 'TimeD',
         'RandomOffsetRange', 'Usage', 'TimeIntervalMin', 'TimeIntervalMax',
@@ -466,10 +473,17 @@ def generate_name_from_file(file_path):
     
     return filename
 
-def write_sound_entries(output_path, sound_entries, wdbx_format=False):
+def write_sound_entries(output_path, sound_entries, wdbx_format=False, append_mode=False):
     """
     Write SoundEntries to CSV file.
     """
+    # Load existing data if in append mode
+    if append_mode:
+        existing_entries = load_existing_csv(output_path)
+        if existing_entries:
+            print(f"  → Merging with {len(existing_entries)} existing entry(ies)")
+            sound_entries = merge_csv_entries(existing_entries, sound_entries)
+    
     fieldnames = [
         'ID', 'SoundType', 'Name',
         'File_1', 'File_2', 'File_3', 'File_4', 'File_5',
@@ -698,12 +712,19 @@ def filter_creature_display_info(creature_display_data, filtered_model_ids, text
     
     return filtered_entries, unmapped_texture_ids, geoset_overflows
 
-def write_creature_display_info(output_path, creature_display_entries, wdbx_format=False):
+def write_creature_display_info(output_path, creature_display_entries, wdbx_format=False, append_mode=False):
     """
     Write CreatureDisplayInfo to CSV file.
     If wdbx_format is True, quote all fields and convert float decimals from . to ,
     Sorts entries by ID.
     """
+    # Load existing data if in append mode
+    if append_mode:
+        existing_entries = load_existing_csv(output_path)
+        if existing_entries:
+            print(f"  → Merging with {len(existing_entries)} existing entry(ies)")
+            creature_display_entries = merge_csv_entries(existing_entries, creature_display_entries)
+    
     fieldnames = [
         'ID', 'ModelID', 'SoundID', 'ExtendedDisplayInfoID', 'CreatureModelScale',
         'CreatureModelAlpha', 'TextureVariation_1', 'TextureVariation_2', 'TextureVariation_3',
@@ -947,8 +968,15 @@ def filter_sound_entries(soundkit_data, filtered_sound_entry_ids, audio_files, s
     
     return sound_entries, unmapped_filedata_ids
 
-def write_soundentries(output_path, sound_entries, wdbx_format=False):
+def write_soundentries(output_path, sound_entries, wdbx_format=False, append_mode=False):
     """Write SoundEntries to CSV file."""
+    # Load existing data if in append mode
+    if append_mode:
+        existing_entries = load_existing_csv(output_path)
+        if existing_entries:
+            print(f"  → Merging with {len(existing_entries)} existing entry(ies)")
+            sound_entries = merge_csv_entries(existing_entries, sound_entries)
+    
     fieldnames = [
         'ID', 'SoundType', 'Name',
         'File_1', 'File_2', 'File_3', 'File_4', 'File_5',
@@ -1166,8 +1194,15 @@ def generate_object_effect_package_output(package_elem_entries, object_effect_gr
     
     return output_entries
 
-def write_object_effect(output_path, object_effect_entries, wdbx_format=False):
+def write_object_effect(output_path, object_effect_entries, wdbx_format=False, append_mode=False):
     """Write ObjectEffect to CSV file."""
+    # Load existing data if in append mode
+    if append_mode:
+        existing_entries = load_existing_csv(output_path)
+        if existing_entries:
+            print(f"  → Merging with {len(existing_entries)} existing entry(ies)")
+            object_effect_entries = merge_csv_entries(existing_entries, object_effect_entries)
+    
     fieldnames = [
         'ID', 'Name', 'ObjectEffectGroupID', 'TriggerType', 'EventType', 'EffectRecType',
         'EffectRecID', 'Attachment', 'OffsetX', 'OffsetY', 'OffsetZ', 'ObjectEffectModifierID'
@@ -1187,8 +1222,15 @@ def write_object_effect(output_path, object_effect_entries, wdbx_format=False):
         writer.writeheader()
         writer.writerows(sorted_entries)
 
-def write_object_effect_group(output_path, object_effect_group_entries, wdbx_format=False):
+def write_object_effect_group(output_path, object_effect_group_entries, wdbx_format=False, append_mode=False):
     """Write ObjectEffectGroup to CSV file."""
+    # Load existing data if in append mode
+    if append_mode:
+        existing_entries = load_existing_csv(output_path)
+        if existing_entries:
+            print(f"  → Merging with {len(existing_entries)} existing entry(ies)")
+            object_effect_group_entries = merge_csv_entries(existing_entries, object_effect_group_entries)
+    
     fieldnames = ['ID', 'Name']
     
     sorted_entries = sorted(object_effect_group_entries, key=lambda x: int(x['ID']) if x['ID'].isdigit() else 0)
@@ -1198,8 +1240,15 @@ def write_object_effect_group(output_path, object_effect_group_entries, wdbx_for
         writer.writeheader()
         writer.writerows(sorted_entries)
 
-def write_object_effect_package_elem(output_path, package_elem_entries, wdbx_format=False):
+def write_object_effect_package_elem(output_path, package_elem_entries, wdbx_format=False, append_mode=False):
     """Write ObjectEffectPackageElem to CSV file."""
+    # Load existing data if in append mode
+    if append_mode:
+        existing_entries = load_existing_csv(output_path)
+        if existing_entries:
+            print(f"  → Merging with {len(existing_entries)} existing entry(ies)")
+            package_elem_entries = merge_csv_entries(existing_entries, package_elem_entries)
+    
     fieldnames = ['ID', 'ObjectEffectPackageID', 'ObjectEffectGroupID', 'StateType']
     
     sorted_entries = sorted(package_elem_entries, key=lambda x: int(x['ID']) if x['ID'].isdigit() else 0)
@@ -1209,8 +1258,15 @@ def write_object_effect_package_elem(output_path, package_elem_entries, wdbx_for
         writer.writeheader()
         writer.writerows(sorted_entries)
 
-def write_object_effect_package(output_path, package_entries, wdbx_format=False):
+def write_object_effect_package(output_path, package_entries, wdbx_format=False, append_mode=False):
     """Write ObjectEffectPackage to CSV file."""
+    # Load existing data if in append mode
+    if append_mode:
+        existing_entries = load_existing_csv(output_path)
+        if existing_entries:
+            print(f"  → Merging with {len(existing_entries)} existing entry(ies)")
+            package_entries = merge_csv_entries(existing_entries, package_entries)
+    
     fieldnames = ['ID', 'Name']
     
     sorted_entries = sorted(package_entries, key=lambda x: int(x['ID']) if x['ID'].isdigit() else 0)
@@ -1262,12 +1318,19 @@ def filter_object_effect_modifier(object_effect_modifier_data, filtered_modifier
     
     return filtered_entries
 
-def write_object_effect_modifier(output_path, modifier_entries, wdbx_format=False):
+def write_object_effect_modifier(output_path, modifier_entries, wdbx_format=False, append_mode=False):
     """
     Write ObjectEffectModifier to CSV file.
     If wdbx_format is True, quote all fields and convert float decimals from . to ,
     Sorts entries by ID.
     """
+    # Load existing data if in append mode
+    if append_mode:
+        existing_entries = load_existing_csv(output_path)
+        if existing_entries:
+            print(f"  → Merging with {len(existing_entries)} existing entry(ies)")
+            modifier_entries = merge_csv_entries(existing_entries, modifier_entries)
+    
     fieldnames = ['ID', 'InputType', 'MapType', 'OutputType', 'Param_0', 'Param_1', 'Param_2', 'Param_3']
     
     if wdbx_format:
@@ -1369,12 +1432,19 @@ def filter_footstep_terrain_lookup(footstep_data, filtered_creature_footstep_ids
     
     return filtered_entries
 
-def write_footstep_terrain_lookup(output_path, footstep_entries, wdbx_format=False):
+def write_footstep_terrain_lookup(output_path, footstep_entries, wdbx_format=False, append_mode=False):
     """
     Write FootstepTerrainLookup to CSV file.
     If wdbx_format is True, quote all fields.
     Sorts entries by ID.
     """
+    # Load existing data if in append mode
+    if append_mode:
+        existing_entries = load_existing_csv(output_path)
+        if existing_entries:
+            print(f"  → Merging with {len(existing_entries)} existing entry(ies)")
+            footstep_entries = merge_csv_entries(existing_entries, footstep_entries)
+    
     fieldnames = ['ID', 'CreatureFootstepID', 'TerrainSoundID', 'SoundID', 'SoundIDSplash']
     
     # Sort by ID
@@ -1427,12 +1497,19 @@ def filter_npc_sounds(npc_sounds_data, filtered_npc_sound_ids):
     
     return filtered_entries
 
-def write_npc_sounds(output_path, npc_entries, wdbx_format=False):
+def write_npc_sounds(output_path, npc_entries, wdbx_format=False, append_mode=False):
     """
     Write NPCSounds to CSV file.
     If wdbx_format is True, quote all fields.
     Sorts entries by ID.
     """
+    # Load existing data if in append mode
+    if append_mode:
+        existing_entries = load_existing_csv(output_path)
+        if existing_entries:
+            print(f"  → Merging with {len(existing_entries)} existing entry(ies)")
+            npc_entries = merge_csv_entries(existing_entries, npc_entries)
+    
     fieldnames = ['ID', 'SoundID_1', 'SoundID_2', 'SoundID_3', 'SoundID_4']
     
     # Sort by ID
@@ -1489,12 +1566,19 @@ def filter_particle_color(particle_color_data, filtered_particle_color_ids):
     
     return filtered_entries
 
-def write_particle_color(output_path, particle_entries, wdbx_format=False):
+def write_particle_color(output_path, particle_entries, wdbx_format=False, append_mode=False):
     """
     Write ParticleColor to CSV file.
     If wdbx_format is True, quote all fields.
     Sorts entries by ID.
     """
+    # Load existing data if in append mode
+    if append_mode:
+        existing_entries = load_existing_csv(output_path)
+        if existing_entries:
+            print(f"  → Merging with {len(existing_entries)} existing entry(ies)")
+            particle_entries = merge_csv_entries(existing_entries, particle_entries)
+    
     fieldnames = ['ID', 'Start_1', 'Start_2', 'Start_3', 'Mid_1', 'Mid_2', 'Mid_3', 'End_1', 'End_2', 'End_3']
     
     # Sort by ID
@@ -1606,12 +1690,19 @@ def filter_creature_sound_data(creature_sound_data, filtered_sound_ids):
     
     return filtered_entries
 
-def write_creature_sound_data(output_path, creature_entries, wdbx_format=False):
+def write_creature_sound_data(output_path, creature_entries, wdbx_format=False, append_mode=False):
     """
     Write CreatureSoundData to CSV file.
     If wdbx_format is True, quote all fields and convert float decimals from . to ,
     Sorts entries by ID.
     """
+    # Load existing data if in append mode
+    if append_mode:
+        existing_entries = load_existing_csv(output_path)
+        if existing_entries:
+            print(f"  → Merging with {len(existing_entries)} existing entry(ies)")
+            creature_entries = merge_csv_entries(existing_entries, creature_entries)
+    
     fieldnames = [
         'ID', 'SoundExertionID', 'SoundExertionCriticalID', 'SoundInjuryID',
         'SoundInjuryCriticalID', 'SoundInjuryCrushingBlowID', 'SoundDeathID',
@@ -1899,12 +1990,19 @@ def filter_creature_model_data(model_data, selected_fileids, listfile_data):
     
     return filtered_entries, unmapped_file_ids
 
-def write_creature_model_data(output_path, model_entries, wdbx_format=False):
+def write_creature_model_data(output_path, model_entries, wdbx_format=False, append_mode=False):
     """
     Write CreatureModelData to CSV file.
     If wdbx_format is True, quote all fields and convert float decimals from . to ,
     Sorts entries by ID.
     """
+    # Load existing data if in append mode
+    if append_mode:
+        existing_entries = load_existing_csv(output_path)
+        if existing_entries:
+            print(f"  → Merging with {len(existing_entries)} existing entry(ies)")
+            model_entries = merge_csv_entries(existing_entries, model_entries)
+    
     fieldnames = ['ID', 'Flags', 'ModelName', 'SizeClass', 'ModelScale', 'BloodID',
                  'FootprintTextureID', 'FootprintTextureLength', 'FootprintTextureWidth',
                  'FootprintParticleScale', 'FoleyMaterialID', 'FootstepShakeSize',
@@ -2114,6 +2212,46 @@ def download_sounds(listfile_path, used_fileids):
         print(f"Failed downloads logged to: {log_path}")
 
 
+def load_existing_csv(file_path):
+    """Load existing CSV, return list of dicts."""
+    if not os.path.exists(file_path):
+        return []
+    entries = []
+    with open(file_path, 'r', encoding='utf-8') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            entries.append(row)
+    return entries
+
+def merge_csv_entries(existing, new, id_field='ID'):
+    """Merge new with existing, skip duplicates."""
+    by_id = {e[id_field]: e for e in existing}
+    skipped, added = 0, 0
+    for entry in new:
+        eid = entry[id_field]
+        if eid not in by_id:
+            by_id[eid] = entry
+            added += 1
+        else:
+            skipped += 1
+    merged = sorted(by_id.values(), key=lambda x: int(x[id_field]))
+    if skipped > 0:
+        print(f"  → Skipped {skipped} duplicate(s), added {added} new")
+    return merged
+
+def load_existing_fileids(listfile_path):
+    """Load FileDataIDs from filtered listfile."""
+    if not os.path.exists(listfile_path):
+        return set()
+    fileids = set()
+    with open(listfile_path, 'r', encoding='utf-8') as f:
+        reader = csv.reader(f, delimiter=';')
+        for row in reader:
+            if len(row) >= 1:
+                fileids.add(row[0].strip())
+    return fileids
+
+
 def main():
     """
     Main processing function - Filtered version (Steps 1-2)
@@ -2126,6 +2264,26 @@ def main():
     
     # Create output directory
     os.makedirs(OUTPUT_DIR, exist_ok=True)
+    
+    # Ask for append or overwrite mode
+    print("=== OUTPUT MODE SELECTION ===")
+    append_mode = False
+    while True:
+        print("Choose output mode:")
+        print("  1. Append to existing files (keep previous data)")
+        print("  2. Overwrite existing files (fresh start)")
+        mode_input = input("Enter choice (1 or 2): ").strip()
+        if mode_input == '1':
+            append_mode = True
+            print("→ Will append to existing files")
+            break
+        elif mode_input == '2':
+            append_mode = False
+            print("→ Will overwrite existing files")
+            break
+        else:
+            print("ERROR: Please enter 1 or 2")
+    print()
     
     # Ask if user wants to download sounds
     print("=== SOUND DOWNLOAD PREFERENCE ===")
@@ -2217,7 +2375,14 @@ def main():
     print(f"\nProceeding with {len(selected_fileids)} selected model(s)")
     
     # Track all FileIDs used in filtered output for listfile generation
-    used_fileids = set(selected_fileids)
+    if append_mode:
+        listfile_output_path = os.path.join(OUTPUT_DIR, "listfile_filtered.csv")
+        existing_fileids = load_existing_fileids(listfile_output_path)
+        if existing_fileids:
+            print(f"→ Append mode: Loaded {len(existing_fileids)} existing FileID(s)")
+        used_fileids = existing_fileids | set(selected_fileids)
+    else:
+        used_fileids = set(selected_fileids)
     
     # Track filtered ModelIDs for CreatureDisplayInfo filtering
     filtered_model_ids = set()
@@ -2273,7 +2438,7 @@ def main():
         
         if filtered_entries:
             output_path = os.path.join(OUTPUT_DIR, "CreatureModelData.csv")
-            write_creature_model_data(output_path, filtered_entries, wdbx_format)
+            write_creature_model_data(output_path, filtered_entries, wdbx_format, append_mode)
             
             if wdbx_format:
                 print(f"Wrote CreatureModelData to: {output_path} (WDBX format)")
@@ -2350,7 +2515,7 @@ def main():
             
             if display_info_entries:
                 output_path = os.path.join(OUTPUT_DIR, "CreatureDisplayInfo.csv")
-                write_creature_display_info(output_path, display_info_entries, wdbx_format)
+                write_creature_display_info(output_path, display_info_entries, wdbx_format, append_mode)
                 
                 # Collect SoundIDs, ParticleColorIDs, NPCSoundIDs, and ObjectEffectPackageIDs from CreatureDisplayInfo
                 for entry in display_info_entries:
@@ -2412,7 +2577,7 @@ def main():
             
             if sound_data_entries:
                 output_path = os.path.join(OUTPUT_DIR, "CreatureSoundData.csv")
-                write_creature_sound_data(output_path, sound_data_entries, wdbx_format)
+                write_creature_sound_data(output_path, sound_data_entries, wdbx_format, append_mode)
                 
                 # Collect NPCSoundIDs and CreatureFootstepIDs from CreatureSoundData
                 for entry in sound_data_entries:
@@ -2466,7 +2631,7 @@ def main():
             
             if particle_color_entries:
                 output_path = os.path.join(OUTPUT_DIR, "ParticleColor.csv")
-                write_particle_color(output_path, particle_color_entries, wdbx_format)
+                write_particle_color(output_path, particle_color_entries, wdbx_format, append_mode)
                 
                 if wdbx_format:
                     print(f"Wrote ParticleColor to: {output_path} (WDBX format)")
@@ -2509,7 +2674,7 @@ def main():
             
             if npc_sounds_entries:
                 output_path = os.path.join(OUTPUT_DIR, "NPCSounds.csv")
-                write_npc_sounds(output_path, npc_sounds_entries, wdbx_format)
+                write_npc_sounds(output_path, npc_sounds_entries, wdbx_format, append_mode)
                 
                 if wdbx_format:
                     print(f"Wrote NPCSounds to: {output_path} (WDBX format)")
@@ -2553,7 +2718,7 @@ def main():
             
             if footstep_entries:
                 output_path = os.path.join(OUTPUT_DIR, "FootstepTerrainLookup.csv")
-                write_footstep_terrain_lookup(output_path, footstep_entries, wdbx_format)
+                write_footstep_terrain_lookup(output_path, footstep_entries, wdbx_format, append_mode)
                 
                 if wdbx_format:
                     print(f"Wrote FootstepTerrainLookup to: {output_path} (WDBX format)")
@@ -2650,7 +2815,7 @@ def main():
                     
                     if object_effect_entries:
                         output_path = os.path.join(OUTPUT_DIR, "ObjectEffect.csv")
-                        write_object_effect(output_path, object_effect_entries, wdbx_format)
+                        write_object_effect(output_path, object_effect_entries, wdbx_format, append_mode)
                         
                         if wdbx_format:
                             print(f"Wrote ObjectEffect to: {output_path} (WDBX format)")
@@ -2672,7 +2837,7 @@ def main():
                         print(f"Generated {len(object_effect_group_entries)} ObjectEffectGroup entries")
                         
                         output_path = os.path.join(OUTPUT_DIR, "ObjectEffectGroup.csv")
-                        write_object_effect_group(output_path, object_effect_group_entries, wdbx_format)
+                        write_object_effect_group(output_path, object_effect_group_entries, wdbx_format, append_mode)
                         
                         if wdbx_format:
                             print(f"Wrote ObjectEffectGroup to: {output_path} (WDBX format)")
@@ -2704,7 +2869,7 @@ def main():
                         
                         if package_elem_entries:
                             output_path = os.path.join(OUTPUT_DIR, "ObjectEffectPackageElem.csv")
-                            write_object_effect_package_elem(output_path, package_elem_entries, wdbx_format)
+                            write_object_effect_package_elem(output_path, package_elem_entries, wdbx_format, append_mode)
                             
                             if wdbx_format:
                                 print(f"Wrote ObjectEffectPackageElem to: {output_path} (WDBX format)")
@@ -2726,7 +2891,7 @@ def main():
                             print(f"Generated {len(package_entries)} ObjectEffectPackage entries")
                             
                             output_path = os.path.join(OUTPUT_DIR, "ObjectEffectPackage.csv")
-                            write_object_effect_package(output_path, package_entries, wdbx_format)
+                            write_object_effect_package(output_path, package_entries, wdbx_format, append_mode)
                             
                             if wdbx_format:
                                 print(f"Wrote ObjectEffectPackage to: {output_path} (WDBX format)")
@@ -2910,7 +3075,7 @@ def main():
             
             # Write SoundEntries
             output_path = os.path.join(OUTPUT_DIR, "SoundEntries.csv")
-            write_sound_entries(output_path, sound_entries, wdbx_format)
+            write_sound_entries(output_path, sound_entries, wdbx_format, append_mode)
             
             # Collect audio FileIDs for filtered listfile
             print("\nCollecting audio FileIDs from SoundEntries for filtered listfile...")
@@ -2976,7 +3141,7 @@ def main():
                         updated_object_effects.append(row)
                 
                 # Write back ObjectEffect with names
-                write_object_effect(object_effect_path, updated_object_effects, wdbx_format)
+                write_object_effect(object_effect_path, updated_object_effects, wdbx_format, append_mode)
                 print(f"Updated {len(updated_object_effects)} ObjectEffect entries with names")
                 
                 # Update ObjectEffectGroup names based on updated ObjectEffect
@@ -3001,7 +3166,7 @@ def main():
                             updated_groups.append(row)
                     
                     # Write back ObjectEffectGroup
-                    write_object_effect_group(object_effect_group_path, updated_groups, wdbx_format)
+                    write_object_effect_group(object_effect_group_path, updated_groups, wdbx_format, append_mode)
                     print(f"Updated {len(updated_groups)} ObjectEffectGroup entries with names")
                 
                 # Update ObjectEffectPackage names based on updated ObjectEffectGroup
@@ -3034,7 +3199,7 @@ def main():
                             if pkg_id in package_names:
                                 pkg['Name'] = package_names[pkg_id]
                         
-                        write_object_effect_package(object_effect_package_path, updated_packages, wdbx_format)
+                        write_object_effect_package(object_effect_package_path, updated_packages, wdbx_format, append_mode)
                         print(f"Updated {len(updated_packages)} ObjectEffectPackage entries with names")
                 
                 print("ObjectEffect chain names updated successfully!")
@@ -3086,7 +3251,7 @@ def main():
                     
                     if advanced_entries:
                         output_path = os.path.join(OUTPUT_DIR, "SoundEntriesAdvanced.csv")
-                        write_sound_entries_advanced(output_path, advanced_entries, wdbx_format)
+                        write_sound_entries_advanced(output_path, advanced_entries, wdbx_format, append_mode)
                         
                         if wdbx_format:
                             print(f"Wrote SoundEntriesAdvanced to: {output_path} (WDBX format)")
@@ -3146,7 +3311,7 @@ def main():
             
             if modifier_entries:
                 output_path = os.path.join(OUTPUT_DIR, "ObjectEffectModifier.csv")
-                write_object_effect_modifier(output_path, modifier_entries, wdbx_format)
+                write_object_effect_modifier(output_path, modifier_entries, wdbx_format, append_mode)
                 
                 if wdbx_format:
                     print(f"Wrote ObjectEffectModifier to: {output_path} (WDBX format)")

@@ -267,7 +267,7 @@ def parse_directory(directory: str) -> Dict[str, List[M2SoundEvent]]:
     return results
 
 
-def export_to_csv(results: Dict[str, List[M2SoundEvent]], output_dir: str = "4_M2_Hardcoded_SoundEntry_ID"):
+def export_to_csv(results: Dict[str, List[M2SoundEvent]], output_dir: str = "4_M2_Hardcoded_SoundEntry_ID", append_mode: bool = False):
     """Export results to CSV format"""
     import csv
     
@@ -276,20 +276,36 @@ def export_to_csv(results: Dict[str, List[M2SoundEvent]], output_dir: str = "4_M
     
     output_file = os.path.join(output_dir, "M2_Hardcoded_SoundEntry_ID.csv")
     
+    # Prepare new entries as dicts
+    new_entries = []
+    for filepath, events in results.items():
+        for event in events:
+            new_entries.append({
+                'Filename': os.path.basename(filepath),
+                'EventType': event.identifier,
+                'SoundEntryID': str(event.sound_entry_id),
+                'M2Offset': hex(event.file_offset)
+            })
+    
+    # Load and merge if in append mode
+    if append_mode:
+        existing_entries = load_existing_csv(output_file)
+        if existing_entries:
+            print(f"  → Merging with {len(existing_entries)} existing entry(ies)")
+            new_entries = merge_m2_entries(existing_entries, new_entries)
+    
+    # Write CSV
     with open(output_file, 'w', newline='', encoding='utf-8') as f:
         writer = csv.writer(f)
-        # Write header
         writer.writerow(['Filename', 'EventType', 'SoundEntryID', 'M2Offset'])
         
-        # Write data
-        for filepath, events in results.items():
-            for event in events:
-                writer.writerow([
-                    os.path.basename(filepath),
-                    event.identifier,
-                    event.sound_entry_id,
-                    hex(event.file_offset)
-                ])
+        for entry in new_entries:
+            writer.writerow([
+                entry['Filename'],
+                entry['EventType'],
+                entry['SoundEntryID'],
+                entry['M2Offset']
+            ])
     
     print(f"\nCSV exported to: {output_file}")
 
@@ -327,6 +343,46 @@ def write_md21_log(output_dir: str = "4_M2_Hardcoded_SoundEntry_ID"):
         print(f"\nMD21 log written to: {output_file}")
 
 
+def load_existing_csv(csv_path):
+    """Load existing CSV data."""
+    import csv
+    if not os.path.exists(csv_path):
+        return []
+    entries = []
+    with open(csv_path, 'r', encoding='utf-8') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            entries.append(row)
+    return entries
+
+
+def merge_m2_entries(existing, new):
+    """Merge M2 entries, skip duplicates by Filename+EventType+SoundEntryID."""
+    # Create unique key for each entry
+    by_key = {}
+    for entry in existing:
+        key = (entry['Filename'], entry['EventType'], entry['SoundEntryID'])
+        by_key[key] = entry
+    
+    skipped, added = 0, 0
+    for entry in new:
+        key = (entry['Filename'], entry['EventType'], entry['SoundEntryID'])
+        if key not in by_key:
+            by_key[key] = entry
+            added += 1
+        else:
+            skipped += 1
+    
+    if skipped > 0:
+        print(f"  → Skipped {skipped} duplicate(s), added {added} new")
+    
+    # Sort by filename, then SoundEntryID
+    merged = sorted(by_key.values(), 
+                    key=lambda x: (x['Filename'], int(x['SoundEntryID'])))
+    return merged
+
+
+
 def main():
     if len(sys.argv) < 2:
         print("Usage:")
@@ -335,6 +391,26 @@ def main():
         sys.exit(1)
     
     input_path = sys.argv[1]
+    
+    # Ask for append or overwrite mode
+    print("=== OUTPUT MODE SELECTION ===")
+    append_mode = False
+    while True:
+        print("Choose output mode:")
+        print("  1. Append to existing CSV (keep previous data)")
+        print("  2. Overwrite existing CSV (fresh start)")
+        mode_input = input("Enter choice (1 or 2): ").strip()
+        if mode_input == '1':
+            append_mode = True
+            print("→ Will append to existing CSV")
+            break
+        elif mode_input == '2':
+            append_mode = False
+            print("→ Will overwrite existing CSV")
+            break
+        else:
+            print("ERROR: Please enter 1 or 2")
+    print()
     
     # Reset MD21 tracking
     M2Parser.md21_detected_files = []
@@ -358,7 +434,7 @@ def main():
             results = {input_path: sound_events}
             
             # Export CSV
-            export_to_csv(results)
+            export_to_csv(results, append_mode=append_mode)
             
     elif os.path.isdir(input_path):
         # Directory
@@ -375,7 +451,7 @@ def main():
         print(f"IDs: {sound_ids}")
         
         # Export CSV
-        export_to_csv(results)
+        export_to_csv(results, append_mode=append_mode)
         
     else:
         print(f"Error: {input_path} is not a valid file or directory")
