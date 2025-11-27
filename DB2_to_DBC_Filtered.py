@@ -3,10 +3,19 @@ import csv
 from pathlib import Path
 from collections import defaultdict
 
+# Optional imports for sound downloading
+try:
+    import requests
+    import time
+    REQUESTS_AVAILABLE = True
+except ImportError:
+    REQUESTS_AVAILABLE = False
+
 # Configuration
 INPUT_DIR = "0_Input"
 OUTPUT_DIR = "3_DBC_Filtered"
 WOTLK_DIR = "1_DBCWotlk_csv"
+DOWNLOAD_DIR = "5_Downloaded_Sounds"
 AUDIO_EXTENSIONS = {'.wav', '.mp3', '.ogg'}
 MODEL_EXTENSIONS = {'.m2'}
 TEXTURE_EXTENSIONS = {'.blp'}
@@ -1652,7 +1661,7 @@ def load_listfile(listfile_path):
 def search_models_by_name(listfile_data, search_name):
     """
     Search for model files (.m2 or .mdx) containing the search name (case-insensitive).
-    Accepts both / and \ path separators in search string.
+    Accepts both / and \\ path separators in search string.
     Returns a list of tuples: [(FileID, Path), ...]
     """
     # Normalize search string: convert / to \ and make lowercase
@@ -1963,6 +1972,148 @@ def write_creature_model_log(log_path, unmapped_file_ids):
             f.write(f"CreatureModelData ID: {item['ID']}\n")
             f.write(f"  FileDataID: {item['FileDataID']} (model not in listfile)\n\n")
 
+def download_sounds(listfile_path, used_fileids):
+    """
+    Download audio files from Wago.tools using FileDataIDs.
+    
+    Args:
+        listfile_path: Path to the listfile CSV
+        used_fileids: Set of FileDataIDs that were used in the filtered output
+    """
+    print("\n" + "=" * 60)
+    print("=== DOWNLOADING SOUNDS ===")
+    print("=" * 60)
+    
+    # Show locale warning
+    print("\n" + "=" * 60)
+    print("=== IMPORTANT: SOUND LOCALE INFORMATION ===")
+    print("=" * 60)
+    print()
+    print("Downloaded sounds are enUS locale from Wago.tools.")
+    print()
+    print("Installation paths:")
+    print("  • Most sounds → wow\\data\\ (music, creatures, spells, effects)")
+    print("  • Locale-specific sounds → wow\\data\\[locale]\\ (character voices, NPC dialogue)")
+    print()
+    print("CRITICAL: wow\\data has PRIORITY over wow\\data\\[locale]")
+    print("If you put locale-specific sounds in wow\\data, they will override any sounds")
+    print("in wow\\data\\[locale], causing English audio to play instead of your locale.")
+    print()
+    print("Note: Cannot automatically determine which sounds are locale-specific.")
+    print("For non-enUS locales, use CASC Explorer or wow.export to obtain locale sounds.")
+    print("Put localized sounds from Wago.tools in wow\\data\\enUS (or enGB) unless you don't care.")
+    print()
+    input("Press Enter to continue...")
+    print()
+    
+    # Load audio files from listfile
+    print("Loading audio files from listfile...")
+    audio_files = {}
+    
+    with open(listfile_path, 'r', encoding='utf-8') as f:
+        reader = csv.reader(f, delimiter=';')
+        for row in reader:
+            if len(row) >= 2:
+                file_id = row[0].strip()
+                file_path = row[1].strip()
+                
+                # Check if file has an audio extension
+                path_lower = file_path.lower()
+                if any(path_lower.endswith(ext) for ext in AUDIO_EXTENSIONS):
+                    # Only include files that were actually used
+                    if file_id in used_fileids:
+                        # Normalize path: replace / with backslash
+                        normalized_path = file_path.replace('/', '\\')
+                        audio_files[file_id] = normalized_path
+    
+    if not audio_files:
+        print("No audio files found in filtered FileDataIDs")
+        return
+    
+    print(f"Found {len(audio_files)} audio files to download")
+    
+    # Create download directory
+    os.makedirs(DOWNLOAD_DIR, exist_ok=True)
+    
+    # Download each file
+    success_count = 0
+    fail_count = 0
+    failed_files = []
+    
+    for idx, (file_id, file_path) in enumerate(audio_files.items(), 1):
+        # Extract directory and filename
+        if '\\' in file_path:
+            sound_folder = '\\'.join(file_path.split('\\')[:-1])
+            filename = file_path.split('\\')[-1]
+        else:
+            sound_folder = ""
+            filename = file_path
+        
+        # Create destination directory
+        if sound_folder:
+            download_destination = os.path.join(DOWNLOAD_DIR, sound_folder)
+        else:
+            download_destination = DOWNLOAD_DIR
+        os.makedirs(download_destination, exist_ok=True)
+        
+        # Full file path
+        output_file = os.path.join(download_destination, filename)
+        
+        # Skip if file already exists
+        if os.path.exists(output_file):
+            print(f"[{idx}/{len(audio_files)}] Skipping (exists): {filename}")
+            success_count += 1
+            continue
+        
+        # Download from Wago.tools
+        url = f'https://wago.tools/api/casc/{file_id}?download'
+        
+        try:
+            print(f"[{idx}/{len(audio_files)}] Downloading: {filename} (FileID: {file_id})")
+            response = requests.get(url, timeout=30)
+            
+            if response.status_code == 200:
+                with open(output_file, 'wb') as f:
+                    f.write(response.content)
+                success_count += 1
+                print(f"  → Saved to: {output_file}")
+            else:
+                fail_count += 1
+                failed_files.append((file_id, filename, f"HTTP {response.status_code}"))
+                print(f"  → FAILED: HTTP {response.status_code}")
+        
+        except requests.exceptions.RequestException as e:
+            fail_count += 1
+            failed_files.append((file_id, filename, str(e)))
+            print(f"  → FAILED: {e}")
+        
+        # Small delay to avoid rate limiting
+        if idx < len(audio_files):  # Don't delay after last file
+            time.sleep(0.1)
+    
+    # Summary
+    print("\n" + "=" * 60)
+    print("=== DOWNLOAD SUMMARY ===")
+    print("=" * 60)
+    print(f"Total files: {len(audio_files)}")
+    print(f"Successfully downloaded/verified: {success_count}")
+    print(f"Failed: {fail_count}")
+    print(f"Download directory: {DOWNLOAD_DIR}")
+    
+    if failed_files:
+        print("\n!!! FAILED DOWNLOADS !!!")
+        log_path = "sound_download_failed.log"
+        with open(log_path, 'w', encoding='utf-8') as f:
+            f.write("Failed sound downloads\n")
+            f.write("=" * 60 + "\n\n")
+            for file_id, filename, error in failed_files:
+                f.write(f"FileID: {file_id}\n")
+                f.write(f"Filename: {filename}\n")
+                f.write(f"Error: {error}\n")
+                f.write("-" * 60 + "\n")
+        print(f"Failed downloads logged to: {log_path}")
+
+
 def main():
     """
     Main processing function - Filtered version (Steps 1-2)
@@ -1975,6 +2126,29 @@ def main():
     
     # Create output directory
     os.makedirs(OUTPUT_DIR, exist_ok=True)
+    
+    # Ask if user wants to download sounds
+    print("=== SOUND DOWNLOAD PREFERENCE ===")
+    download_sounds_flag = False
+    
+    if not REQUESTS_AVAILABLE:
+        print("Note: 'requests' library not installed - sound download unavailable")
+        print("To enable: pip install requests")
+        print()
+    else:
+        while True:
+            download_input = input("Download sounds after processing? (y/n): ").strip().lower()
+            if download_input in ['y', 'yes']:
+                download_sounds_flag = True
+                print("→ Will download sounds after processing completes")
+                break
+            elif download_input in ['n', 'no']:
+                download_sounds_flag = False
+                print("→ Will skip sound downloads")
+                break
+            else:
+                print("Please enter 'y' or 'n'")
+        print()
     
     # Ask for WDBX format preference
     print("=== FORMAT SELECTION ===")
@@ -3064,6 +3238,10 @@ def main():
         print("\nPlease review these logs to identify missing entries in the listfile.")
     else:
         print("\nNo issues found - all FileDataIDs were successfully mapped!")
+    
+    # Download sounds if requested
+    if download_sounds_flag:
+        download_sounds(listfile_path, used_fileids)
     
     print("\n" + "=" * 60)
 
