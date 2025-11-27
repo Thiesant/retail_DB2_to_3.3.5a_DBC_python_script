@@ -1652,9 +1652,11 @@ def load_listfile(listfile_path):
 def search_models_by_name(listfile_data, search_name):
     """
     Search for model files (.m2 or .mdx) containing the search name (case-insensitive).
+    Accepts both / and \ path separators in search string.
     Returns a list of tuples: [(FileID, Path), ...]
     """
-    search_name_lower = search_name.lower()
+    # Normalize search string: convert / to \ and make lowercase
+    search_name_normalized = search_name.replace('/', '\\').lower()
     matches = []
     
     for file_id, file_path in listfile_data.items():
@@ -1664,8 +1666,8 @@ def search_models_by_name(listfile_data, search_name):
         
         # Check if it's a model file (.m2 or .mdx)
         if path_lower.endswith('.m2') or path_lower.endswith('.mdx'):
-            # Check if search name is in the path
-            if search_name_lower in path_lower:
+            # Check if normalized search name is in the normalized path
+            if search_name_normalized in path_lower:
                 matches.append((file_id, normalized_path))
     
     return matches
