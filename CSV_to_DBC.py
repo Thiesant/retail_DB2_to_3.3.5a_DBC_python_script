@@ -201,35 +201,18 @@ class DBCSchema:
         # ========================================
         # P
         # ========================================
+        #RGB1 RGB2 RGB3 ? or 0xAARRGGBB ?
         'ParticleColor': [
             ('ID', TYPE_UINT),
-            ('Start_R_1', TYPE_INT),
-            ('Start_G_1', TYPE_INT),
-            ('Start_B_1', TYPE_INT),
-            ('Start_R_2', TYPE_INT),
-            ('Start_G_2', TYPE_INT),
-            ('Start_B_2', TYPE_INT),
-            ('Start_R_3', TYPE_INT),
-            ('Start_G_3', TYPE_INT),
-            ('Start_B_3', TYPE_INT),
-            ('Mid_R_1', TYPE_INT),
-            ('Mid_G_1', TYPE_INT),
-            ('Mid_B_1', TYPE_INT),
-            ('Mid_R_2', TYPE_INT),
-            ('Mid_G_2', TYPE_INT),
-            ('Mid_B_2', TYPE_INT),
-            ('Mid_R_3', TYPE_INT),
-            ('Mid_G_3', TYPE_INT),
-            ('Mid_B_3', TYPE_INT),
-            ('End_R_1', TYPE_INT),
-            ('End_G_1', TYPE_INT),
-            ('End_B_1', TYPE_INT),
-            ('End_R_2', TYPE_INT),
-            ('End_G_2', TYPE_INT),
-            ('End_B_2', TYPE_INT),
-            ('End_R_3', TYPE_INT),
-            ('End_G_3', TYPE_INT),
-            ('End_B_3', TYPE_INT),
+            ('Start_1', TYPE_INT),
+            ('Start_2', TYPE_INT),
+            ('Start_3', TYPE_INT),
+            ('Mid_1', TYPE_INT),
+            ('Mid_2', TYPE_INT),
+            ('Mid_3', TYPE_INT),
+            ('End_1', TYPE_INT),
+            ('End_2', TYPE_INT),
+            ('End_3', TYPE_INT),
         ],
         
         # ========================================
@@ -237,8 +220,8 @@ class DBCSchema:
         # ========================================
         'SoundAmbience': [
             ('ID', TYPE_UINT),
-            ('AmbienceID_Day', TYPE_UINT),
-            ('AmbienceID_Night', TYPE_UINT),
+            ('AmbienceID_0', TYPE_UINT), #day
+            ('AmbienceID_1', TYPE_UINT), #night
         ],
         
         'SoundEmitters': [
@@ -324,6 +307,7 @@ class DBCSchema:
             ('SoundFilterID', TYPE_UINT),
             ('OrderIndex', TYPE_UINT),
             ('FilterType', TYPE_UINT),
+            ('Params_0', TYPE_FLOAT),
             ('Params_1', TYPE_FLOAT),
             ('Params_2', TYPE_FLOAT),
             ('Params_3', TYPE_FLOAT),
@@ -332,7 +316,6 @@ class DBCSchema:
             ('Params_6', TYPE_FLOAT),
             ('Params_7', TYPE_FLOAT),
             ('Params_8', TYPE_FLOAT),
-            ('Params_9', TYPE_FLOAT),
         ],
         
         'SoundProviderPreferences': [
@@ -369,10 +352,10 @@ class DBCSchema:
             ('ID', TYPE_UINT),
             ('VocalUIEnum', TYPE_UINT),
             ('RaceID', TYPE_UINT),
-            ('NormalSoundID_Male', TYPE_INT),
-            ('NormalSoundID_Female', TYPE_INT),
-            ('PissedSoundID_Male', TYPE_INT),
-            ('PissedSoundID_Female', TYPE_INT),
+            ('NormalSoundID_1', TYPE_INT), #male
+            ('NormalSoundID_2', TYPE_INT), #female
+            ('PissedSoundID_1', TYPE_INT), #male
+            ('PissedSoundID_2', TYPE_INT), #female
         ],
         
         # ========================================
@@ -417,13 +400,13 @@ class DBCSchema:
         
         'ZoneMusic': [
             ('ID', TYPE_UINT),
-            ('Name', TYPE_STRING),
-            ('SilenceIntervalMin_Day', TYPE_UINT),
-            ('SilenceIntervalMin_Night', TYPE_UINT),
-            ('SilenceIntervalMax_Day', TYPE_UINT),
-            ('SilenceIntervalMax_Night', TYPE_UINT),
-            ('Sounds_Day', TYPE_UINT),
-            ('Sounds_Night', TYPE_UINT),
+            ('SetName', TYPE_STRING),
+            ('SilenceIntervalMin_1', TYPE_UINT), #day
+            ('SilenceIntervalMin_2', TYPE_UINT), #night
+            ('SilenceIntervalMax_1', TYPE_UINT), #day
+            ('SilenceIntervalMax_2', TYPE_UINT), #night
+            ('Sounds_1', TYPE_UINT),             #day
+            ('Sounds_2', TYPE_UINT),             #night
         ],
     }
     
