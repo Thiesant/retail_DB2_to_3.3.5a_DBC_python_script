@@ -295,6 +295,8 @@ def write_log(log_path, issues):
         f.write("=" * 60 + "\n\n")
         f.write("The following entries have FileDataIDs that are not in the listfile\n")
         f.write("or have File_X values without audio extensions (.wav, .mp3, .ogg).\n\n")
+        f.write("NOTE: Frequency (Freq_X) has been set to 0 for all unmapped FileDataIDs\n")
+        f.write("to prevent the game from attempting to play non-existent files.\n\n")
         f.write("These FileDataIDs need to be manually corrected once the listfile\n")
         f.write("is updated with the missing file paths.\n\n")
         f.write("=" * 60 + "\n")
@@ -309,7 +311,7 @@ def write_log(log_path, issues):
             
             for file_idx, file_path in issue['files']:
                 if file_path.isdigit():
-                    f.write(f"  File_{file_idx}: {file_path} (FileDataID not in listfile)\n")
+                    f.write(f"  File_{file_idx}: {file_path} (FileDataID not in listfile, Freq_{file_idx} = 0)\n")
                 else:
                     f.write(f"  File_{file_idx}: {file_path} (missing audio extension)\n")
             
@@ -2155,6 +2157,7 @@ def generate_sound_entries(soundkit_data, audio_files, soundkit_table):
         # Now collect file paths and frequencies (up to 10)
         file_paths = []
         frequencies = []
+        is_mapped = []  # Track if FileDataID was successfully mapped
         
         for i, entry in enumerate(entries[:10]):  # Limit to 10 entries
             file_data_id = entry['filedataid'].strip()
@@ -2164,10 +2167,12 @@ def generate_sound_entries(soundkit_data, audio_files, soundkit_table):
             if file_data_id in audio_files:
                 file_paths.append(audio_files[file_data_id])
                 frequencies.append(frequency)
+                is_mapped.append(True)
             else:
                 # FileDataID not found in listfile - keep the ID number for manual correction
                 file_paths.append(file_data_id)
-                frequencies.append(frequency)
+                frequencies.append('0')  # Set frequency to 0 for unmapped files
+                is_mapped.append(False)
         
         # Find common directory
         directory_base = find_common_directory(file_paths)
@@ -2190,10 +2195,15 @@ def generate_sound_entries(soundkit_data, audio_files, soundkit_table):
         for i in range(1, 11):
             file_value = entry_data.get(f'File_{i}', '')
             if file_value:
-                # File has data, use frequency or default to 1
-                if i-1 < len(frequencies) and frequencies[i-1]:
+                # Check if this file was mapped
+                if i-1 < len(is_mapped) and not is_mapped[i-1]:
+                    # Unmapped FileDataID - force frequency to 0
+                    entry_data[f'Freq_{i}'] = '0'
+                elif i-1 < len(frequencies) and frequencies[i-1]:
+                    # Mapped file - use actual frequency
                     entry_data[f'Freq_{i}'] = frequencies[i-1]
                 else:
+                    # Mapped file but no frequency - default to 1
                     entry_data[f'Freq_{i}'] = '1'
             else:
                 # File is empty, set freq to 0

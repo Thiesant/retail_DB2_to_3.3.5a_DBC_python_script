@@ -323,6 +323,7 @@ def generate_sound_entries(soundkit_data, audio_files, soundkit_table):
         # Collect file paths and frequencies (up to 10)
         file_paths = []
         frequencies = []
+        is_mapped = []  # Track if FileDataID was successfully mapped
         
         for i, entry in enumerate(entries[:10]):
             file_data_id = entry['filedataid'].strip()
@@ -332,9 +333,11 @@ def generate_sound_entries(soundkit_data, audio_files, soundkit_table):
             if file_data_id in audio_files:
                 file_paths.append(audio_files[file_data_id])
                 frequencies.append(frequency)
+                is_mapped.append(True)
             else:
                 file_paths.append(file_data_id)
-                frequencies.append(frequency)
+                frequencies.append('0')  # Set frequency to 0 for unmapped files
+                is_mapped.append(False)
         
         # Find common directory
         directory_base = find_common_directory(file_paths)
@@ -356,11 +359,18 @@ def generate_sound_entries(soundkit_data, audio_files, soundkit_table):
         for i in range(1, 11):
             file_value = entry_data.get(f'File_{i}', '')
             if file_value:
-                if i-1 < len(frequencies) and frequencies[i-1]:
+                # Check if this file was mapped
+                if i-1 < len(is_mapped) and not is_mapped[i-1]:
+                    # Unmapped FileDataID - force frequency to 0
+                    entry_data[f'Freq_{i}'] = '0'
+                elif i-1 < len(frequencies) and frequencies[i-1]:
+                    # Mapped file - use actual frequency
                     entry_data[f'Freq_{i}'] = frequencies[i-1]
                 else:
+                    # Mapped file but no frequency - default to 1
                     entry_data[f'Freq_{i}'] = '1'
             else:
+                # File is empty, set freq to 0
                 entry_data[f'Freq_{i}'] = '0'
         
         # Set VolumeFloat to the highest volume
@@ -918,11 +928,18 @@ def filter_sound_entries(soundkit_data, filtered_sound_entry_ids, audio_files, s
         for i in range(1, 11):
             file_value = entry_data.get(f'File_{i}', '')
             if file_value:
-                if i-1 < len(frequencies) and frequencies[i-1]:
+                # Check if this file was mapped
+                if i-1 < len(is_mapped) and not is_mapped[i-1]:
+                    # Unmapped FileDataID - force frequency to 0
+                    entry_data[f'Freq_{i}'] = '0'
+                elif i-1 < len(frequencies) and frequencies[i-1]:
+                    # Mapped file - use actual frequency
                     entry_data[f'Freq_{i}'] = frequencies[i-1]
                 else:
+                    # Mapped file but no frequency - default to 1
                     entry_data[f'Freq_{i}'] = '1'
             else:
+                # File is empty, set freq to 0
                 entry_data[f'Freq_{i}'] = '0'
         
         # Set VolumeFloat to the highest volume
