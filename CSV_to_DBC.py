@@ -130,6 +130,32 @@ class DBCSchema:
             ('CreatureSoundDataIDPet', TYPE_UINT),
         ],
         
+        
+        # ========================================
+        # G
+        # ========================================
+        'GameObjectDisplayInfo': [
+            ('ID', TYPE_UINT),
+            ('ModelName', TYPE_STRING),
+            ('Sound_1', TYPE_UINT),
+            ('Sound_2', TYPE_UINT),
+            ('Sound_3', TYPE_UINT),
+            ('Sound_4', TYPE_UINT),
+            ('Sound_5', TYPE_UINT),
+            ('Sound_6', TYPE_UINT),
+            ('Sound_7', TYPE_UINT),
+            ('Sound_8', TYPE_UINT),
+            ('Sound_9', TYPE_UINT),
+            ('Sound_10', TYPE_UINT),
+            ('GeoBoxMinX', TYPE_FLOAT),
+            ('GeoBoxMinY', TYPE_FLOAT),
+            ('GeoBoxMinZ', TYPE_FLOAT),
+            ('GeoBoxMaxX', TYPE_FLOAT),
+            ('GeoBoxMaxY', TYPE_FLOAT),
+            ('GeoBoxMaxZ', TYPE_FLOAT),
+            ('ObjectEffectPackageID', TYPE_UINT),
+        ],
+        
         # ========================================
         # F
         # ========================================

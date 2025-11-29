@@ -17,7 +17,7 @@ OUTPUT_DIR = "3_DBC_Filtered"
 WOTLK_DIR = "1_DBCWotlk_csv"
 DOWNLOAD_DIR = "5_Downloaded_Sounds"
 AUDIO_EXTENSIONS = {'.wav', '.mp3', '.ogg'}
-MODEL_EXTENSIONS = {'.m2'}
+MODEL_EXTENSIONS = {'.m2', '.wmo', '.mdl'}
 TEXTURE_EXTENSIONS = {'.blp'}
 
 def find_listfile(directory):
@@ -1022,17 +1022,20 @@ def write_soundentries_log(log_path, unmapped_ids):
     """Write log file for SoundEntries with unmapped FileDataIDs."""
     with open(log_path, 'w', encoding='utf-8') as f:
         f.write("SoundEntries - Missing Audio FileDataID Mappings (FILTERED)\n")
-        f.write("=" * 60 + "\n\n")
-        f.write("The following SoundKit entries have FileDataIDs that are not in the listfile.\n\n")
         f.write("=" * 60 + "\n")
-        f.write(f"SUMMARY:\n")
+        f.write("The following SoundKit entries have FileDataIDs that are not in the listfile\n")
+        f.write("or do not have audio extensions (.wav, .mp3, .ogg).\n\n")
+        f.write("These FileDataIDs need to be manually corrected once the listfile\n")
+        f.write("is updated with the missing file paths.\n")
+        f.write("=" * 60 + "\n")
+        f.write("SUMMARY:\n")
+        f.write(f"  - Total SoundKit entries affected: {len(unmapped_ids)}\n")
         f.write(f"  - Unique FileDataIDs not in listfile: {len(set(item['FileDataID'] for item in unmapped_ids))}\n")
-        f.write("=" * 60 + "\n\n")
+        f.write("=" * 60 + "\n")
         
         for entry in unmapped_ids:
             f.write(f"SoundKitID: {entry['SoundKitID']}\n")
-            f.write(f"FileDataID: {entry['FileDataID']}\n")
-            f.write("-" * 60 + "\n")
+            f.write(f"  FileDataID: {entry['FileDataID']} (not in listfile)\n\n")
 
 def load_object_effect(object_effect_path):
     """
@@ -1368,16 +1371,17 @@ def write_object_effect_log(log_path, zero_effect_rec_ids):
     """Write log file for ObjectEffect entries with EffectRecID = 0."""
     with open(log_path, 'w', encoding='utf-8') as f:
         f.write("ObjectEffect - Skipped Entries with EffectRecID = 0 (FILTERED)\n")
-        f.write("=" * 60 + "\n\n")
+        f.write("=" * 60 + "\n")
         f.write("The following ObjectEffect entries have EffectRecID = 0 and were excluded\n")
         f.write("from the output as they don't reference any sound.\n\n")
         f.write("=" * 60 + "\n")
-        f.write(f"SUMMARY:\n")
+        f.write("SUMMARY:\n")
         f.write(f"  - Total entries skipped: {len(zero_effect_rec_ids)}\n")
-        f.write("=" * 60 + "\n\n")
+        f.write("=" * 60 + "\n")
         
         for entry_id in zero_effect_rec_ids:
-            f.write(f"ObjectEffect ID: {entry_id} (EffectRecID = 0)\n")
+            f.write(f"ObjectEffectID: {entry_id}\n")
+            f.write(f"  EffectRecID: 0 (no sound reference)\n\n")
 
 def write_object_effect_package_elem_log(log_path, skipped_ids):
     """Write log file for ObjectEffectPackageElem entries with invalid ObjectEffectGroupID."""
@@ -1956,10 +1960,12 @@ def filter_creature_model_data(model_data, selected_fileids, listfile_data):
             model_path = listfile_data.get(filedata_id, '')
             
             if model_path:
-                # Normalize path: replace / with \ and change .m2 to .mdx
+                # Normalize path: replace / with \
                 normalized_path = model_path.replace('/', '\\')
+                # Convert .m2 to .mdx for WotLK compatibility
                 if normalized_path.lower().endswith('.m2'):
                     normalized_path = normalized_path[:-3] + '.mdx'
+                # Keep .wmo and .mdl as-is
                 
                 model_name = normalized_path
             else:
@@ -2086,6 +2092,211 @@ def write_creature_model_log(log_path, unmapped_file_ids):
         for item in unmapped_file_ids:
             f.write(f"CreatureModelData ID: {item['ID']}\n")
             f.write(f"  FileDataID: {item['FileDataID']} (model not in listfile)\n\n")
+
+
+def load_gameobject_display_info(gameobject_display_path):
+    """
+    Load GameObjectDisplayInfo entries.
+    Returns a list of dictionaries with normalized column names.
+    """
+    gameobject_data = []
+    
+    with open(gameobject_display_path, 'r', encoding='utf-8') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            # Normalize column names to lowercase for case-insensitive matching
+            row_normalized = {k.lower(): v for k, v in row.items()}
+            gameobject_data.append(row_normalized)
+    
+    return gameobject_data
+
+def filter_gameobject_display_info(gameobject_data, selected_fileids, listfile_data):
+    """
+    Filter GameObjectDisplayInfo entries for selected FileIDs.
+    Returns tuple: (filtered_entries, unmapped_file_ids, gameobject_display_ids)
+    """
+    filtered_entries = []
+    unmapped_file_ids = []
+    gameobject_display_ids = set()
+    
+    for entry in gameobject_data:
+        filedata_id = entry.get('filedataid', '').strip()
+        
+        # Check if this entry matches any selected FileID
+        if filedata_id in selected_fileids:
+            display_id = entry.get('id', '').strip()
+            gameobject_display_ids.add(display_id)
+            
+            # Get the model path from listfile
+            model_path = listfile_data.get(filedata_id, '')
+            
+            if model_path:
+                # Normalize path: replace / with \
+                normalized_path = model_path.replace('/', '\\')
+                # Convert .m2 to .mdx for WotLK compatibility
+                if normalized_path.lower().endswith('.m2'):
+                    normalized_path = normalized_path[:-3] + '.mdx'
+                # Keep .wmo and .mdl as-is
+                
+                model_name = normalized_path
+            else:
+                # FileDataID not found in listfile
+                model_name = filedata_id
+                if filedata_id:
+                    unmapped_file_ids.append({
+                        'ID': display_id,
+                        'FileDataID': filedata_id
+                    })
+            
+            # Create output entry - sounds will be populated later
+            output_entry = {
+                'ID': display_id,
+                'ModelName': model_name,
+                'Sound_1': '0',
+                'Sound_2': '0',
+                'Sound_3': '0',
+                'Sound_4': '0',
+                'Sound_5': '0',
+                'Sound_6': '0',
+                'Sound_7': '0',
+                'Sound_8': '0',
+                'Sound_9': '0',
+                'Sound_10': '0',
+                'GeoBoxMinX': entry.get('geobox_0', '0').strip(),
+                'GeoBoxMinY': entry.get('geobox_1', '0').strip(),
+                'GeoBoxMinZ': entry.get('geobox_2', '0').strip(),
+                'GeoBoxMaxX': entry.get('geobox_3', '0').strip(),
+                'GeoBoxMaxY': entry.get('geobox_4', '0').strip(),
+                'GeoBoxMaxZ': entry.get('geobox_5', '0').strip(),
+                'ObjectEffectPackageID': entry.get('objecteffectpackageid', '0').strip()
+            }
+            
+            filtered_entries.append(output_entry)
+    
+    return filtered_entries, unmapped_file_ids, gameobject_display_ids
+
+def load_gameobject_display_info_x_soundkit(soundkit_x_path):
+    """
+    Load GameObjectDisplayInfoXSoundKit table from input.
+    Groups by GameObjectDisplayInfoID and EventIndex.
+    Returns a dictionary: {GameObjectDisplayInfoID: {EventIndex: SoundKitID}}
+    """
+    soundkit_x_data = defaultdict(dict)
+    
+    with open(soundkit_x_path, 'r', encoding='utf-8') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            # Normalize column names to lowercase for case-insensitive matching
+            row_normalized = {k.lower(): v for k, v in row.items()}
+            display_info_id = row_normalized.get('gameobjectdisplayinfoid', '').strip()
+            event_index = row_normalized.get('eventindex', '').strip()
+            soundkit_id = row_normalized.get('soundkitid', '').strip()
+            
+            if display_info_id and event_index and soundkit_id:
+                # EventIndex 0-9 maps to Sound_1 to Sound_10
+                soundkit_x_data[display_info_id][event_index] = soundkit_id
+    
+    return soundkit_x_data
+
+def populate_gameobject_sounds(gameobject_entries, gameobject_soundkit_x_data, 
+                                filtered_soundkit_ids, soundkit_to_soundentries):
+    """
+    Populate Sound_X fields in GameObjectDisplayInfo entries.
+    Collects SoundKit IDs that need to be added to SoundEntries.
+    Updates entries in-place and returns set of collected SoundKit IDs.
+    """
+    collected_soundkit_ids = set()
+    
+    for entry in gameobject_entries:
+        display_id = entry['ID']
+        
+        # Get sounds for this GameObjectDisplayInfo
+        if display_id in gameobject_soundkit_x_data:
+            for event_index, soundkit_id in gameobject_soundkit_x_data[display_id].items():
+                # EventIndex 0-9 maps to Sound_1 to Sound_10
+                try:
+                    index = int(event_index)
+                    if 0 <= index <= 9:
+                        # Check if this SoundKit already has a SoundEntries ID
+                        if soundkit_id in soundkit_to_soundentries:
+                            # Use existing SoundEntries ID
+                            sound_entry_id = soundkit_to_soundentries[soundkit_id]
+                        else:
+                            # New SoundKit - use SoundKitID as SoundEntries ID
+                            sound_entry_id = soundkit_id
+                            collected_soundkit_ids.add(soundkit_id)
+                            filtered_soundkit_ids.add(soundkit_id)
+                        
+                        entry[f'Sound_{index + 1}'] = sound_entry_id
+                except (ValueError, TypeError):
+                    pass
+    
+    return collected_soundkit_ids
+
+def write_gameobject_display_info(output_path, gameobject_entries, wdbx_format=False, append_mode=False):
+    """
+    Write GameObjectDisplayInfo to CSV file.
+    If wdbx_format is True, quote all fields and convert float decimals from . to ,
+    Sorts entries by ID.
+    """
+    # Load existing data if in append mode
+    if append_mode:
+        existing_entries = load_existing_csv(output_path)
+        if existing_entries:
+            print(f"  → Merging with {len(existing_entries)} existing entry(ies)")
+            # Merge: keep existing entries, add new ones, update duplicates
+            existing_ids = {e['ID']: e for e in existing_entries}
+            for entry in gameobject_entries:
+                existing_ids[entry['ID']] = entry
+            gameobject_entries = list(existing_ids.values())
+    
+    fieldnames = ['ID', 'ModelName',
+                  'Sound_1', 'Sound_2', 'Sound_3', 'Sound_4', 'Sound_5',
+                  'Sound_6', 'Sound_7', 'Sound_8', 'Sound_9', 'Sound_10',
+                  'GeoBoxMinX', 'GeoBoxMinY', 'GeoBoxMinZ',
+                  'GeoBoxMaxX', 'GeoBoxMaxY', 'GeoBoxMaxZ',
+                  'ObjectEffectPackageID']
+    
+    if wdbx_format:
+        # Convert float fields for WDBX format
+        float_fields = ['GeoBoxMinX', 'GeoBoxMinY', 'GeoBoxMinZ',
+                       'GeoBoxMaxX', 'GeoBoxMaxY', 'GeoBoxMaxZ']
+        for entry in gameobject_entries:
+            for field in float_fields:
+                if field in entry:
+                    entry[field] = convert_float_to_wdbx(entry[field])
+    
+    # Sort by ID
+    sorted_entries = sorted(gameobject_entries, key=lambda x: int(x['ID']) if x['ID'].isdigit() else 0)
+    
+    with open(output_path, 'w', encoding='utf-8', newline='') as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames, quoting=csv.QUOTE_ALL if wdbx_format else csv.QUOTE_MINIMAL)
+        writer.writeheader()
+        writer.writerows(sorted_entries)
+
+
+def write_gameobject_display_info_log(log_path, unmapped_file_ids):
+    """
+    Write log file for unmapped GameObjectDisplayInfo FileDataIDs.
+    """
+    with open(log_path, 'w', encoding='utf-8') as f:
+        f.write("GameObjectDisplayInfo (FILTERED) - Unmapped FileDataIDs\n")
+        f.write("=" * 60 + "\n")
+        f.write("The following entries have FileDataIDs that are not in the listfile\n")
+        f.write("or do not have model extensions (.m2, .wmo, .mdl).\n\n")
+        f.write("These FileDataIDs need to be manually corrected once the listfile\n")
+        f.write("is updated with the missing file paths.\n")
+        f.write("=" * 60 + "\n")
+        f.write("SUMMARY:\n")
+        f.write(f"  - Total GameObjectDisplayInfo entries affected: {len(unmapped_file_ids)}\n")
+        f.write(f"  - Unique FileDataIDs not in listfile: {len(set(entry['FileDataID'] for entry in unmapped_file_ids))}\n")
+        f.write("=" * 60 + "\n")
+        
+        for entry in unmapped_file_ids:
+            display_id = entry['ID']
+            file_id = entry['FileDataID']
+            f.write(f"GameObjectDisplayInfoID: {display_id}\n")
+            f.write(f"  FileDataID: {file_id} (not in listfile)\n\n")
 
 def download_sounds(listfile_path, used_fileids):
     """
@@ -2472,6 +2683,65 @@ def main():
         else:
             print("WARNING: No CreatureModelData entries found for selected model(s)")
     
+
+    # STEP 2B: Filter and generate GameObjectDisplayInfo
+    print("\n" + "=" * 60)
+    print("=== STEP 2B: GENERATING GAMEOBJECTDISPLAYINFO (FILTERED) ===")
+    print("=" * 60)
+    
+    # Track GameObjectDisplayInfo IDs for sound filtering
+    filtered_gameobject_display_ids = set()
+    gameobject_entries = []
+    
+    gameobject_display_path = find_table_file(INPUT_DIR, "GameObjectDisplayInfo")
+    
+    if not gameobject_display_path:
+        print(f"WARNING: GameObjectDisplayInfo table not found in {INPUT_DIR}")
+        print("Skipping GameObjectDisplayInfo generation")
+    else:
+        print(f"Found GameObjectDisplayInfo: {gameobject_display_path}")
+        print("Loading GameObjectDisplayInfo...")
+        gameobject_data = load_gameobject_display_info(gameobject_display_path)
+        print(f"Loaded {len(gameobject_data)} total GameObjectDisplayInfo entries")
+        
+        print("\nFiltering GameObjectDisplayInfo for selected model(s)...")
+        gameobject_entries, unmapped_gameobject_models, filtered_gameobject_display_ids = filter_gameobject_display_info(
+            gameobject_data, selected_fileids, listfile_data)
+        print(f"Filtered to {len(gameobject_entries)} entries")
+        
+        # Collect ObjectEffectPackageIDs for ObjectEffect chain filtering
+        for entry in gameobject_entries:
+            package_id = entry.get('ObjectEffectPackageID', '').strip()
+            if package_id and package_id != '0':
+                filtered_object_effect_package_ids.add(package_id)
+        
+        if unmapped_gameobject_models:
+            log_path = "GameObjectDisplayInfo_filtered.log"
+            write_gameobject_display_info_log(log_path, unmapped_gameobject_models)
+            print(f"WARNING: {len(unmapped_gameobject_models)} entries have unmapped FileDataIDs")
+            print(f"Log written to: {log_path}")
+        
+        if gameobject_entries:
+            # Note: Sounds will be populated later after loading GameObjectDisplayInfoXSoundKit
+            print(f"Found {len(gameobject_entries)} GameObjectDisplayInfo entries")
+            print("(Sounds will be populated after loading sound mappings)")
+        else:
+            print("WARNING: No GameObjectDisplayInfo entries found for selected model(s)")
+    
+    # Display what we found
+    print("\n" + "=" * 60)
+    print("=== MODEL SEARCH RESULTS ===")
+    print("=" * 60)
+    if filtered_model_ids:
+        print(f"✓ Found in CreatureModelData: {len(filtered_model_ids)} entry(ies)")
+    if filtered_gameobject_display_ids:
+        print(f"✓ Found in GameObjectDisplayInfo: {len(filtered_gameobject_display_ids)} entry(ies)")
+    
+    if not filtered_model_ids and not filtered_gameobject_display_ids:
+        print("✗ Model(s) not found in either CreatureModelData or GameObjectDisplayInfo")
+        print("Please check your FileDataID or model name and try again.")
+        return
+    print()
     # STEP 3: Filter and generate CreatureDisplayInfo
     print("\n" + "=" * 60)
     print("=== STEP 3: GENERATING CREATUREDISPLAYINFO (FILTERED) ===")
@@ -3019,6 +3289,53 @@ def main():
                 if effect_rec_id and effect_rec_id != '0':
                     filtered_soundkit_ids.add(effect_rec_id)
         print(f"  Collected from ObjectEffect")
+
+    # From GameObjectDisplayInfo (via GameObjectDisplayInfoXSoundKit)
+    if filtered_gameobject_display_ids:
+        print("\nLoading GameObjectDisplayInfoXSoundKit...")
+        gameobject_soundkit_x_path = find_table_file(INPUT_DIR, "GameObjectDisplayInfoXSoundKit")
+        
+        if gameobject_soundkit_x_path:
+            print(f"Found GameObjectDisplayInfoXSoundKit: {gameobject_soundkit_x_path}")
+            gameobject_soundkit_x_data = load_gameobject_display_info_x_soundkit(gameobject_soundkit_x_path)
+            
+            # Create SoundKit ID to SoundEntries ID mapping (will be populated as we process)
+            soundkit_to_soundentries = {}
+            
+            # Populate GameObject sounds and collect new SoundKit IDs
+            print(f"Populating sounds for {len(gameobject_entries)} GameObjectDisplayInfo entries...")
+            collected_soundkit_ids = populate_gameobject_sounds(
+                gameobject_entries, gameobject_soundkit_x_data, 
+                filtered_soundkit_ids, soundkit_to_soundentries)
+            
+            print(f"  Collected {len(collected_soundkit_ids)} SoundKit IDs from GameObjectDisplayInfo")
+            
+            # Write GameObjectDisplayInfo with populated sounds
+            if gameobject_entries:
+                output_path = os.path.join(OUTPUT_DIR, "GameObjectDisplayInfo.csv")
+                write_gameobject_display_info(output_path, gameobject_entries, wdbx_format, append_mode)
+                
+                if wdbx_format:
+                    print(f"  Wrote GameObjectDisplayInfo to: {output_path} (WDBX format)")
+                else:
+                    print(f"  Wrote GameObjectDisplayInfo to: {output_path}")
+                
+                print("\n  === Sample GameObjectDisplayInfo (first 3) ===")
+                for entry in gameobject_entries[:3]:
+                    print(f"  ID: {entry['ID']}")
+                    for key, value in entry.items():
+                        if value and key != 'ID' and value != '0':
+                            print(f"    {key}: {value}")
+                    print()
+        else:
+            print("WARNING: GameObjectDisplayInfoXSoundKit not found")
+            print("GameObjectDisplayInfo will have no sounds (all Sound_X = 0)")
+            
+            # Still write GameObjectDisplayInfo even without sounds
+            if gameobject_entries:
+                output_path = os.path.join(OUTPUT_DIR, "GameObjectDisplayInfo.csv")
+                write_gameobject_display_info(output_path, gameobject_entries, wdbx_format, append_mode)
+                print(f"Wrote GameObjectDisplayInfo to: {output_path} (without sounds)")
     
     print(f"\nTotal SoundKit IDs collected: {len(filtered_soundkit_ids)}")
     
