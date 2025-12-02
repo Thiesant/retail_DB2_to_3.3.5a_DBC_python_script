@@ -8,7 +8,13 @@ INPUT_DIR = "0_Input"
 OUTPUT_DIR = "2_DBCRetail_to_Wotlk_csv"
 WOTLK_DIR = "1_DBCWotlk_csv"
 AUDIO_EXTENSIONS = {'.wav', '.mp3', '.ogg'}
-MODEL_EXTENSIONS = {'.m2', '.wmo', '.mdl'}
+# Use .m2 .mdx .mdl as .mdx for csv/dbc generation
+MODEL_EXTENSIONS = {
+    '.m2': '.mdx',
+    '.mdx': '.mdx',
+    '.mdl': '.mdx',
+    '.wmo': '.wmo' 
+}
 TEXTURE_EXTENSIONS = {'.blp'}
 
 def find_listfile(directory):
@@ -62,10 +68,10 @@ def load_audio_files(listfile_path):
 
 def load_model_files(listfile_path):
     """
-    Load model files (.m2, .wmo, .mdl) from listfile.
+    Load model files from listfile.
     Returns a dictionary: {FileID: normalized_path}
-    Replaces .m2 extension with .mdx in the path.
-    Keeps .wmo and .mdl extensions as-is.
+    
+    Uses MODEL_EXTENSIONS to identify and convert model files.
     Normalizes paths to use backslashes.
     """
     model_files = {}
@@ -79,16 +85,16 @@ def load_model_files(listfile_path):
                 
                 # Check if file has model extension (case-insensitive)
                 path_lower = file_path.lower()
-                if any(path_lower.endswith(ext) for ext in MODEL_EXTENSIONS):
-                    # Normalize path: replace / with \
-                    normalized_path = file_path.replace('/', '\\')
-                    
-                    # Convert .m2 to .mdx for WotLK compatibility
-                    if path_lower.endswith('.m2'):
-                        normalized_path = normalized_path[:-3] + '.mdx'
-                    # Keep .wmo and .mdl as-is
-                    
-                    model_files[file_id] = normalized_path
+                
+                # Find matching extension
+                for input_ext, output_ext in MODEL_EXTENSIONS.items():
+                    if path_lower.endswith(input_ext):
+                        # Normalize path: replace / with \
+                        normalized_path = file_path.replace('/', '\\')
+                        # Convert extension
+                        normalized_path = normalized_path[:-len(input_ext)] + output_ext
+                        model_files[file_id] = normalized_path
+                        break
     
     return model_files
 
@@ -643,6 +649,7 @@ def write_object_effect_log(log_path, zero_effect_rec_ids):
         f.write("=" * 60 + "\n")
         f.write("The following ObjectEffect entries have EffectRecID = 0 and were excluded\n")
         f.write("from the output as they don't reference any sound.\n\n")
+        f.write("This is normal behavior for placeholder or unused effect entries.\n")
         f.write("=" * 60 + "\n")
         f.write("SUMMARY:\n")
         f.write(f"  - Total entries skipped: {len(zero_effect_rec_ids)}\n")
@@ -2557,9 +2564,9 @@ if __name__ == "__main__":
     audio_files = load_audio_files(listfile_path)
     print(f"Loaded {len(audio_files)} audio files (.wav, .mp3, .ogg)")
     
-    # Load model files (.m2 → .mdx)
+    # Load model files (.m2.mdl.mdx → .mdx)
     model_files = load_model_files(listfile_path)
-    print(f"Loaded {len(model_files)} model files (.m2 → .mdx)")
+    print(f"Loaded {len(model_files)} model files (.m2.mdl.mdx → .mdx)")
     
     # Load texture files (.blp → filename only)
     texture_files = load_texture_files(listfile_path)

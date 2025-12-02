@@ -17,7 +17,13 @@ OUTPUT_DIR = "3_DBC_Filtered"
 WOTLK_DIR = "1_DBCWotlk_csv"
 DOWNLOAD_DIR = "5_Downloaded_Sounds"
 AUDIO_EXTENSIONS = {'.wav', '.mp3', '.ogg'}
-MODEL_EXTENSIONS = {'.m2', '.wmo', '.mdl'}
+# Use .m2 .mdx .mdl as .mdx for csv/dbc generation
+MODEL_EXTENSIONS = {
+    '.m2': '.mdx',
+    '.mdx': '.mdx',
+    '.mdl': '.mdx',
+    '.wmo': '.wmo'
+}
 TEXTURE_EXTENSIONS = {'.blp'}
 
 def find_listfile(directory):
@@ -1773,12 +1779,29 @@ def load_listfile(listfile_path):
 
 def search_models_by_name(listfile_data, search_name):
     """
-    Search for model files (.m2 or .mdx) containing the search name (case-insensitive).
+    Search for model files containing the search name (case-insensitive).
     Accepts both / and \\ path separators in search string.
     Returns a list of tuples: [(FileID, Path), ...]
     """
     # Normalize search string: convert / to \ and make lowercase
     search_name_normalized = search_name.replace('/', '\\').lower()
+    
+    # Build list of search patterns to try
+    search_patterns = [search_name_normalized]
+    
+    # Check if search ends with any model extension
+    for search_ext, output_ext in MODEL_EXTENSIONS.items():
+        if search_name_normalized.endswith(search_ext):
+            base = search_name_normalized[:-len(search_ext)]
+            # If this extension converts to .mdx, try all extensions that convert to .mdx
+            if output_ext == '.mdx':
+                for other_ext, other_output in MODEL_EXTENSIONS.items():
+                    if other_output == '.mdx':
+                        pattern = base + other_ext
+                        if pattern not in search_patterns:
+                            search_patterns.append(pattern)
+            break
+    
     matches = []
     
     for file_id, file_path in listfile_data.items():
@@ -1786,11 +1809,15 @@ def search_models_by_name(listfile_data, search_name):
         normalized_path = file_path.replace('/', '\\')
         path_lower = normalized_path.lower()
         
-        # Check if it's a model file (.m2 or .mdx)
-        if path_lower.endswith('.m2') or path_lower.endswith('.mdx'):
-            # Check if normalized search name is in the normalized path
-            if search_name_normalized in path_lower:
-                matches.append((file_id, normalized_path))
+        # Check if it's a model file (using MODEL_EXTENSIONS)
+        is_model = any(path_lower.endswith(ext) for ext in MODEL_EXTENSIONS.keys())
+        
+        if is_model:
+            # Check if any search pattern matches (.m2 .mdl .mdx)
+            for pattern in search_patterns:
+                if pattern in path_lower:
+                    matches.append((file_id, normalized_path))
+                    break
     
     return matches
 
@@ -1825,8 +1852,9 @@ def prompt_model_selection(listfile_data):
                     normalized_path = file_path.replace('/', '\\')
                     path_lower = normalized_path.lower()
                     
-                    # Check if it's a model file and FileID contains the input
-                    if (path_lower.endswith('.m2') or path_lower.endswith('.mdx')) and file_id_input in file_id:
+                    # Check if it's a model file (using MODEL_EXTENSIONS) and FileID contains the input
+                    is_model = any(path_lower.endswith(ext) for ext in MODEL_EXTENSIONS.keys())
+                    if is_model and file_id_input in file_id:
                         matches.append((file_id, normalized_path))
                 
                 if not matches:
@@ -1963,10 +1991,13 @@ def filter_creature_model_data(model_data, selected_fileids, listfile_data):
             if model_path:
                 # Normalize path: replace / with \
                 normalized_path = model_path.replace('/', '\\')
-                # Convert .m2 to .mdx for WotLK compatibility
-                if normalized_path.lower().endswith('.m2'):
-                    normalized_path = normalized_path[:-3] + '.mdx'
-                # Keep .wmo and .mdl as-is
+                
+                # Convert extension using MODEL_EXTENSIONS
+                path_lower = normalized_path.lower()
+                for input_ext, output_ext in MODEL_EXTENSIONS.items():
+                    if path_lower.endswith(input_ext):
+                        normalized_path = normalized_path[:-len(input_ext)] + output_ext
+                        break
                 
                 model_name = normalized_path
             else:
@@ -2081,7 +2112,7 @@ def write_creature_model_log(log_path, unmapped_file_ids):
     with open(log_path, 'w', encoding='utf-8') as f:
         f.write("CreatureModelData - Missing Model FileDataID Mappings (FILTERED)\n")
         f.write("=" * 60 + "\n\n")
-        f.write("The following entries have FileDataIDs (.m2 models) that are not in the listfile.\n")
+        f.write("The following entries have FileDataIDs (.m2, .wmo models) that are not in the listfile.\n")
         f.write("These FileDataIDs need to be manually corrected once the listfile\n")
         f.write("is updated with the missing model paths.\n\n")
         f.write("=" * 60 + "\n")
@@ -2134,10 +2165,13 @@ def filter_gameobject_display_info(gameobject_data, selected_fileids, listfile_d
             if model_path:
                 # Normalize path: replace / with \
                 normalized_path = model_path.replace('/', '\\')
-                # Convert .m2 to .mdx for WotLK compatibility
-                if normalized_path.lower().endswith('.m2'):
-                    normalized_path = normalized_path[:-3] + '.mdx'
-                # Keep .wmo and .mdl as-is
+                
+                # Convert extension using MODEL_EXTENSIONS
+                path_lower = normalized_path.lower()
+                for input_ext, output_ext in MODEL_EXTENSIONS.items():
+                    if path_lower.endswith(input_ext):
+                        normalized_path = normalized_path[:-len(input_ext)] + output_ext
+                        break
                 
                 model_name = normalized_path
             else:
@@ -2284,7 +2318,7 @@ def write_gameobject_display_info_log(log_path, unmapped_file_ids):
         f.write("GameObjectDisplayInfo (FILTERED) - Unmapped FileDataIDs\n")
         f.write("=" * 60 + "\n")
         f.write("The following entries have FileDataIDs that are not in the listfile\n")
-        f.write("or do not have model extensions (.m2, .wmo, .mdl).\n\n")
+        f.write("or do not have model extensions (.m2, .mdx, .mdl, .wmo).\n\n")
         f.write("These FileDataIDs need to be manually corrected once the listfile\n")
         f.write("is updated with the missing file paths.\n")
         f.write("=" * 60 + "\n")
