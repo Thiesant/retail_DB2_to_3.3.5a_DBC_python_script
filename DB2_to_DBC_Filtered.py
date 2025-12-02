@@ -1374,6 +1374,7 @@ def write_object_effect_log(log_path, zero_effect_rec_ids):
         f.write("=" * 60 + "\n")
         f.write("The following ObjectEffect entries have EffectRecID = 0 and were excluded\n")
         f.write("from the output as they don't reference any sound.\n\n")
+        f.write("This is normal behavior for placeholder or unused effect entries.\n")
         f.write("=" * 60 + "\n")
         f.write("SUMMARY:\n")
         f.write(f"  - Total entries skipped: {len(zero_effect_rec_ids)}\n")
@@ -2451,19 +2452,31 @@ def load_existing_csv(file_path):
             entries.append(row)
     return entries
 
-def merge_csv_entries(existing, new, id_field='ID'):
-    """Merge new with existing, skip duplicates."""
+def merge_csv_entries(existing, new, id_field='ID', update_existing=False):
+    """
+    Merge new with existing entries.
+    If update_existing=True, new entries update existing ones with same ID.
+    If update_existing=False (default), duplicates are skipped (old behavior).
+    """
     by_id = {e[id_field]: e for e in existing}
-    skipped, added = 0, 0
+    skipped, added, updated = 0, 0, 0
     for entry in new:
         eid = entry[id_field]
         if eid not in by_id:
             by_id[eid] = entry
             added += 1
         else:
-            skipped += 1
+            if update_existing:
+                # Update existing entry with new data
+                by_id[eid] = entry
+                updated += 1
+            else:
+                # Skip duplicate (keep existing)
+                skipped += 1
     merged = sorted(by_id.values(), key=lambda x: int(x[id_field]))
-    if skipped > 0:
+    if update_existing and updated > 0:
+        print(f"  → Updated {updated} existing, added {added} new")
+    elif skipped > 0:
         print(f"  → Skipped {skipped} duplicate(s), added {added} new")
     return merged
 
@@ -3463,20 +3476,38 @@ def main():
                 
                 # Create name lookup from sound_entries
                 sound_name_lookup = {entry['ID']: entry.get('Name', '') for entry in sound_entries}
+                print(f"  Sound name lookup has {len(sound_name_lookup)} entries")
+                print(f"  Sample sound IDs in lookup: {list(sound_name_lookup.keys())[:5]}")
                 
                 # Read ObjectEffect
                 updated_object_effects = []
+                names_updated = 0
+                effect_rec_ids_found = []
+                effect_rec_ids_missing = []
+                
                 with open(object_effect_path, 'r', encoding='utf-8') as f:
                     reader = csv.DictReader(f)
                     for row in reader:
                         effect_rec_id = row.get('EffectRecID', '').strip()
                         if effect_rec_id in sound_name_lookup:
                             row['Name'] = sound_name_lookup[effect_rec_id]
+                            names_updated += 1
+                            effect_rec_ids_found.append(effect_rec_id)
+                        elif effect_rec_id and effect_rec_id != '0':
+                            effect_rec_ids_missing.append(effect_rec_id)
                         updated_object_effects.append(row)
                 
-                # Write back ObjectEffect with names
-                write_object_effect(object_effect_path, updated_object_effects, wdbx_format, append_mode)
-                print(f"Updated {len(updated_object_effects)} ObjectEffect entries with names")
+                # Write back ObjectEffect with names (overwrite, don't append)
+                write_object_effect(object_effect_path, updated_object_effects, wdbx_format, append_mode=False)
+                print(f"Updated {names_updated} of {len(updated_object_effects)} ObjectEffect entries with names")
+                
+                if effect_rec_ids_missing:
+                    print(f"  WARNING: {len(effect_rec_ids_missing)} EffectRecIDs not found in SoundEntries:")
+                    print(f"    Missing IDs (first 10): {effect_rec_ids_missing[:10]}")
+                    print(f"    These IDs need to be in SoundEntries for names to populate")
+                
+                if effect_rec_ids_found:
+                    print(f"  Successfully matched {len(effect_rec_ids_found)} EffectRecIDs")
                 
                 # Update ObjectEffectGroup names based on updated ObjectEffect
                 print("Updating ObjectEffectGroup names...")
@@ -3499,8 +3530,8 @@ def main():
                                 row['Name'] = group_names[group_id]
                             updated_groups.append(row)
                     
-                    # Write back ObjectEffectGroup
-                    write_object_effect_group(object_effect_group_path, updated_groups, wdbx_format, append_mode)
+                    # Write back ObjectEffectGroup (overwrite, don't append)
+                    write_object_effect_group(object_effect_group_path, updated_groups, wdbx_format, append_mode=False)
                     print(f"Updated {len(updated_groups)} ObjectEffectGroup entries with names")
                 
                 # Update ObjectEffectPackage names based on updated ObjectEffectGroup
@@ -3533,7 +3564,7 @@ def main():
                             if pkg_id in package_names:
                                 pkg['Name'] = package_names[pkg_id]
                         
-                        write_object_effect_package(object_effect_package_path, updated_packages, wdbx_format, append_mode)
+                        write_object_effect_package(object_effect_package_path, updated_packages, wdbx_format, append_mode=False)
                         print(f"Updated {len(updated_packages)} ObjectEffectPackage entries with names")
                 
                 print("ObjectEffect chain names updated successfully!")

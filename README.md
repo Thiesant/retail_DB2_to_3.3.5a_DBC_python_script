@@ -65,7 +65,7 @@ python DB2_to_DBC_Filtered.py
 Converts complete retail DB2 datasets to WotLK 3.3.5a DBC format. Use this when you need complete DBC resources or want to create a comprehensive sound patch.
 
 **Features:**
-- Processes 22 different DBC tables
+- Processes 23 different DBC tables
 - Converts FileDataIDs to file paths
 - Optional WotLK naming preservation
 - WDBX Editor format support
@@ -75,7 +75,7 @@ Converts complete retail DB2 datasets to WotLK 3.3.5a DBC format. Use this when 
 python DB2_to_DBC.py
 ```
 
-**Output:** `2_DBCRetail_to_Wotlk_csv/` (22 CSV files)
+**Output:** `2_DBCRetail_to_Wotlk_csv/` (23 CSV files)
 
 📖 **[Full Documentation](DB2_to_DBC_README.md)**
 
@@ -91,7 +91,7 @@ Converts CSV database files to WoW 3.3.5a DBC format. **This is the final step**
 - Merges with existing DBC
 - Updates new entries, no duplicate ID
 - Automatic backup creation (.dbc.bak files)
-- Currently Supports 22 different DBC tables
+- Currently Supports 23 different DBC tables
  
 **Usage:**
 ```bash
@@ -116,7 +116,7 @@ python CSV_to_DBC.py
 ### For Complete DBC Resources / Mega Sound Patch
 ```
 1. Run m2_Hardcoded_SoundEntry_ID_extractor.py → Extract M2 sounds (optional but recommended)
-2. Run DB2_to_DBC.py → Full CSV dataset (all 22 tables)
+2. Run DB2_to_DBC.py → Full CSV dataset (all 23 tables)
 3. Run CSV_to_DBC.py → Convert CSV to binary DBC
 ```
 
@@ -165,12 +165,21 @@ pip install requests
 - DB2 tables in CSV format (from [wago.tools](https://wago.tools/db2))
 
 **Required tables** (minimum for core functionality):
-- SoundKit, SoundKitEntry, SoundKitAdvanced
-- CreatureDisplayInfo, CreatureModelData, CreatureSoundData
+- CreatureDisplayInfo
 - CreatureDisplayInfoGeosetData
-- NPCSounds, FootstepTerrainLookup
+- CreatureModelData
+- CreatureSoundData
+- FootstepTerrainLookup
+- GameObjectDisplayInfo
+- GameObjectDisplayInfoXSoundKit
+- NPCSounds
+- ObjectEffect
+- ObjectEffectModifier
+- ObjectEffectPackageElem
 - ParticleColor
-- ObjectEffect, ObjectEffectModifier, ObjectEffectPackageElem
+- SoundKit
+- SoundKitAdvanced
+- SoundKitEntry
 - And more (see individual tool documentation)
 
 ## 🎮 Output Format
@@ -216,16 +225,17 @@ The download option does not feature other locale, you'll have to use wow.export
 
 ## 🔍 What Gets Converted
 
-### Covered Systems (22 DBC Tables)
-✅ **Creature Sounds** - Attack, death, aggro, fidget, footsteps  
-✅ **NPC Vocals** - Voice-overs and speech  
+### Covered DBC (23 DBC Tables)
 ✅ **Ambient Sounds** - Day/night zone ambience  
-✅ **Zone Music** - Background and intro music  
+✅ **Creature Display** - Models, textures, geosets  
+✅ **Creature Sounds** - Attack, death, aggro, fidget, footsteps  
+✅ **Game Object Display**
+✅ **Effects** - Particle colors, object effects related sounds 
+✅ **Emitters** - World sound emitters  
+✅ **NPC Vocals** - Voice-overs and speech  
 ✅ **UI Sounds** - Vocal UI  
 ✅ **Weapon Sounds** - Impact sounds  
-✅ **Emitters** - World sound emitters  
-✅ **Effects** - Particle colors, object effects related sounds 
-✅ **Creature Display** - Models, textures, geosets  
+✅ **Zone Music** - Background and intro music  
 
 ### Key Features
 - **FileDataID → File Path** conversion

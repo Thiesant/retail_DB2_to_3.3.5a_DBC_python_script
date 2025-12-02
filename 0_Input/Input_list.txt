@@ -13,32 +13,32 @@ Source: https://github.com/wowdev/wow-listfile
 Source: https://wago.tools/db2
 
 MINIMAL REQUIRED (for Filtered Converter):
-  - SoundKit.csv
-  - SoundKitEntry.csv
-  - CreatureModelData.csv
   - CreatureDisplayInfo.csv
   - CreatureDisplayInfoGeosetData.csv
+  - CreatureModelData.csv
   - CreatureSoundData.csv
+  - FootstepTerrainLookup.csv
   - GameObjectDisplayInfo.csv
   - GameObjectDisplayInfoXSoundKit.csv
   - NPCSounds.csv
-  - FootstepTerrainLookup.csv
-  - ParticleColor.csv
   - ObjectEffect.csv
   - ObjectEffectModifier.csv
   - ObjectEffectPackageElem.csv
+  - ParticleColor.csv
+  - SoundKit.csv
+  - SoundKitAdvanced.csv
+  - SoundKitEntry.csv
 
 ADDITIONAL TABLES (for Full Converter):
-  - SoundKitAdvanced.csv
-  - ZoneMusic.csv
-  - ZoneIntroMusicTable.csv
-  - VocalUISounds.csv
-  - SoundProviderPreferences.csv
+  - SoundAmbience.csv
+  - SoundEmitters.csv
   - SoundFilter.csv
   - SoundFilterElem.csv
-  - SoundEmitters.csv
-  - SoundAmbience.csv
+  - SoundProviderPreferences.csv
+  - VocalUISounds.csv
   - WeaponImpactSounds.csv
+  - ZoneIntroMusicTable.csv
+  - ZoneMusic.csv
 
 Note: CreatureDisplayInfoGeosetData calculation uses: Σ(GeosetValue × 16^GeosetIndex)
       Models with GeosetIndex > 8 may need editing in WoW Blender Studio.

@@ -129,7 +129,17 @@ class DBCSchema:
             ('SubmergedSoundID', TYPE_UINT),
             ('CreatureSoundDataIDPet', TYPE_UINT),
         ],
-        
+                
+        # ========================================
+        # F
+        # ========================================
+        'FootstepTerrainLookup': [
+            ('ID', TYPE_UINT),
+            ('CreatureFootstepID', TYPE_UINT),
+            ('TerrainSoundID', TYPE_UINT),
+            ('SoundID', TYPE_UINT),
+            ('SoundIDSplash', TYPE_UINT),
+        ],
         
         # ========================================
         # G
@@ -154,17 +164,6 @@ class DBCSchema:
             ('GeoBoxMaxY', TYPE_FLOAT),
             ('GeoBoxMaxZ', TYPE_FLOAT),
             ('ObjectEffectPackageID', TYPE_UINT),
-        ],
-        
-        # ========================================
-        # F
-        # ========================================
-        'FootstepTerrainLookup': [
-            ('ID', TYPE_UINT),
-            ('CreatureFootstepID', TYPE_UINT),
-            ('TerrainSoundID', TYPE_UINT),
-            ('SoundID', TYPE_UINT),
-            ('SoundIDSplash', TYPE_UINT),
         ],
         
         # ========================================

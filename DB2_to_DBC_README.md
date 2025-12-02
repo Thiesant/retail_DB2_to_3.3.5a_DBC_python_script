@@ -41,28 +41,30 @@ Must contain:
   
 - **Retail DB2 Tables** (CSV format, `[table].[version].csv` or `[table].csv)
   - Required tables:
-    - `SoundKit.csv` or `SoundKit.[version].csv`
-    - `SoundKitEntry.csv`
+	- `GameObjectDisplayInfo.csv`
     - `CreatureDisplayInfo.csv`
+    - `CreatureDisplayInfoGeosetData.csv` (for CreatureGeosetData calculation I used : Σ(GeosetValue × 16^GeosetIndex), meaning that you may have to edit the .m2 that have GeosetIndex is > 8 (WoW Blender Studio)
     - `CreatureModelData.csv`
     - `CreatureSoundData.csv`
-    - `NPCSounds.csv`
     - `FootstepTerrainLookup.csv`
-    - `ZoneMusic.csv`
-    - `ZoneIntroMusicTable.csv`
-    - `VocalUISounds.csv`
-    - `SoundProviderPreferences.csv`
-    - `SoundFilter.csv`
-    - `SoundFilterElem.csv`
-    - `SoundEmitters.csv`
-    - `SoundAmbience.csv`
-    - `WeaponImpactSounds.csv`
-    - `ParticleColor.csv`
+    - `GameObjectDisplayInfoXSoundKit.csv`
+    - `NPCSounds.csv`
     - `ObjectEffect.csv`
     - `ObjectEffectModifier.csv`
     - `ObjectEffectPackageElem.csv`
+    - `ParticleColor.csv`
+    - `SoundAmbience.csv`
+    - `SoundEmitters.csv`
+    - `SoundFilter.csv`
+    - `SoundFilterElem.csv`
+    - `SoundKit.csv` or `SoundKit.[version].csv`
     - `SoundKitAdvanced.csv`
-    - `CreatureDisplayInfoGeosetData.csv` (for CreatureGeosetData calculation I used : Σ(GeosetValue × 16^GeosetIndex), meaning that you may have to edit the .m2 that have GeosetIndex is > 8 (WoW Blender Studio)
+    - `SoundKitEntry.csv`
+    - `SoundProviderPreferences.csv`
+    - `VocalUISounds.csv`
+    - `WeaponImpactSounds.csv`
+    - `ZoneIntroMusicTable.csv`
+    - `ZoneMusic.csv`
 
 #### 2. `1_DBCWotlk_csv/` - WotLK Reference Data (Optional)
 - **`Wotlk_SoundEntries.csv`**
@@ -71,7 +73,7 @@ Must contain:
 
 #### 3. `2_DBCRetail_to_Wotlk_csv/` - Output Directory
 - This directory will be **automatically created** by the script
-- All converted DBC files will be saved here
+- All converted CSV files will be saved here
 
 ### File Format Notes
 - All input CSV files should be UTF-8 encoded
@@ -144,19 +146,20 @@ The script will:
 ### 5. Review Output
 
 Check the `2_DBCRetail_to_Wotlk_csv/` folder for:
-- **22 converted DBC CSV files** (ready for WotLK)
+- **23 converted DBC CSV files** (ready for WotLK)
 - **Log files** (if any issues were found)
 
 #### Log Files
 The script may generate log files for issues that need manual review:
 
-- **`SoundEntries.log`** - FileDataIDs not found in listfile (for audio files)
-- **`SoundEntries_SoundKit.log`** - Missing SoundKit data (defaults applied)
-- **`CreatureModelData.log`** - Model FileDataIDs not in listfile
-- **`CreatureDisplayInfo_Textures.log`** - Texture FileDataIDs not in listfile
 - **`CreatureDisplayInfo_GeosetOverflow.log`** - Geoset calculations exceeding limits
+- **`CreatureDisplayInfo_Textures.log`** - Texture FileDataIDs not in listfile
+- **`CreatureModelData.log`** - Model FileDataIDs not in listfile
+- **`GameObjectDisplayInfo.log`** - FileDataIDs not found in listfile
 - **`ObjectEffect.log`** - Entries with EffectRecID = 0 (skipped)
 - **`ObjectEffectPackageElem.log`** - Invalid ObjectEffectGroupID references
+- **`SoundEntries.log`** - FileDataIDs not found in listfile (for audio files)
+- **`SoundEntries_SoundKit.log`** - Missing SoundKit data (defaults applied)
 
 **Review these logs** to identify missing listfile entries or data issues.
 
@@ -164,71 +167,51 @@ The script may generate log files for issues that need manual review:
 
 ### Downported DBC Files from Retail to WotLK 3.3.5a
 
-The script generates **22 CSV files** compatible with WotLK 3.3.5a:
+The script generates **23 CSV files** compatible with WotLK 3.3.5a:
 
-#### Current DBC wotlk downport list featured (22 files)
-1. **SoundEntries.csv** - Main sound definitions
-   - Merged from: SoundKit + SoundKitEntry
-   - Maps FileDataIDs to audio file paths
-   - Includes volume, distance, and audio settings
-
-2. **SoundEntriesAdvanced.csv** - Advanced sound parameters
-   - Source: SoundKitAdvanced
-
-3. **CreatureSoundData.csv** 
-   - Creature audio events
-   ( Attack, death, aggro, footstep, Fidget sounds and custom attacks etc.)
-
-4. **NPCSounds.csv**
-   - NPC vocal sound references
-
-5. **SoundAmbience.csv**
-   - Ambient sound zones
-   - Day and night ambient sound IDs
-
-6. **SoundEmitters.csv**
-   - World sound emitters
-
-7. **SoundProviderPreferences.csv**
-   - Audio provider settings and priorities
-
-8. **SoundFilter.csv**
-
-9. **SoundFilterElem.csv**
-
-10. **ZoneMusic.csv**
-    - Zone background music
-    - Day/night music per zone
-
-11. **ZoneIntroMusicTable.csv**
-    - Zone intro music
-    - Music played when entering zones
-
-12. **VocalUISounds.csv**
-    - UI voice-overs (bag full, etc.)
-
-13. **WeaponImpactSounds.csv**
-    - Weapon impact sounds, duuh
-
-14. **FootstepTerrainLookup.csv**
+#### Current DBC wotlk downport list featured (23 files)
+1.  **CreatureDisplayInfo.csv**
+2.  **CreatureModelData.csv**
+3.  **CreatureSoundData.csv**
+    - Creature audio events   ( Attack, death, aggro, footstep, Fidget sounds and custom attacks etc.)
+4.  **FootstepTerrainLookup.csv**
     - Links terrain types to footstep sound IDs
     - Optionally filtered to WotLK terrain types only
-
-15. **CreatureDisplayInfo.csv**
-
-16. **CreatureModelData.csv**
-
-17. **ParticleColor.csv**
-
-18. **ObjectEffect.csv**
-
-19. **ObjectEffectModifier.csv**
-
-20. **ObjectEffectGroup.csv**
-
-21. **ObjectEffectPackage.csv**
-
-22. **ObjectEffectPackageElem.csv**
+5.  **GameObjectDisplayInfo.csv**
+6.  **NPCSounds.csv**
+    - NPC vocal sound references
+7.  **ObjectEffect.csv**
+8.  **ObjectEffectGroup.csv**
+9.  **ObjectEffectModifier.csv**
+10. **ObjectEffectPackage.csv**
+11. **ObjectEffectPackageElem.csv**
+12. **ParticleColor.csv**
+13. **SoundAmbience.csv**
+    - Ambient sound zones
+    - Day and night ambient sound IDs
+14. **SoundEmitters.csv**
+    - World sound emitters
+15. **SoundEntries.csv** 
+    - Main sound definitions- Merged from: SoundKit + SoundKitEntry
+    - Maps FileDataIDs to audio file paths
+    - Includes volume, distance, and audio settings
+16. **SoundEntriesAdvanced.csv**
+    - Advanced sound parameters
+    - Source: SoundKitAdvanced
+17. **SoundFilter.csv**
+18. **SoundFilterElem.csv**
+19. **SoundProviderPreferences.csv**
+    - Audio provider settings and priorities
+20. **VocalUISounds.csv**
+    - UI voice-overs (bag full, etc.)
+21. **WeaponImpactSounds.csv**
+    - Weapon impact sounds, duuh
+22. **ZoneIntroMusicTable.csv**
+    - Zone intro music
+    - Music played when entering zones
+23. **ZoneMusic.csv**
+    - Zone background music
+    - Day/night music per zone
 
 ### Key Features of Output Files
 
